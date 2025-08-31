@@ -37,7 +37,7 @@ export function LoginForm() {
   return (
     <Card className="shadow-lg border-border">
       <CardHeader className="space-y-1">
-        <CardTitle className="text-xl text-center text-foreground">Iniciar Sesión</CardTitle>
+        <CardTitle className="text-2xl font-bold text-center text-foreground">Iniciar Sesión</CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">

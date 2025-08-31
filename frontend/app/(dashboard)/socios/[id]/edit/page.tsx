@@ -1,26 +1,32 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState, useEffect } from "react"
-import { useRouter, useParams } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { ArrowLeft, Upload, X } from "lucide-react"
-import Link from "next/link"
+import { useState, useEffect } from "react";
+import { useRouter, useParams } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { ArrowLeft, Upload, X } from "lucide-react";
+import Link from "next/link";
 
 interface Member {
-  id: string
-  dni: string
-  firstName: string
-  lastName: string
-  email: string
-  phone: string
-  status: "active" | "inactive"
-  photo?: string
+  id: string;
+  dni: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  status: "active" | "inactive";
+  photo?: string;
 }
 
 // Mock data - in real app, fetch from API
@@ -43,14 +49,14 @@ const mockMembers: Member[] = [
     phone: "+34 600 654 321",
     status: "active",
   },
-]
+];
 
 export default function EditMemberPage() {
-  const router = useRouter()
-  const params = useParams()
-  const memberId = params.id as string
+  const router = useRouter();
+  const params = useParams();
+  const memberId = params.id as string;
 
-  const [member, setMember] = useState<Member | null>(null)
+  const [member, setMember] = useState<Member | null>(null);
   const [formData, setFormData] = useState({
     dni: "",
     firstName: "",
@@ -58,17 +64,18 @@ export default function EditMemberPage() {
     email: "",
     phone: "",
     status: "active" as "active" | "inactive",
-  })
-  const [photo, setPhoto] = useState<File | null>(null)
-  const [photoPreview, setPhotoPreview] = useState<string | null>(null)
-  const [isDragOver, setIsDragOver] = useState(false)
-  const [errors, setErrors] = useState<Record<string, string>>({})
+  });
+  const [photo, setPhoto] = useState<File | null>(null);
+  const [photoError, setPhotoError] = useState<string | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [isDragOver, setIsDragOver] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     // In real app, fetch member from API
-    const foundMember = mockMembers.find((m) => m.id === memberId)
+    const foundMember = mockMembers.find((m) => m.id === memberId);
     if (foundMember) {
-      setMember(foundMember)
+      setMember(foundMember);
       setFormData({
         dni: foundMember.dni,
         firstName: foundMember.firstName,
@@ -76,77 +83,95 @@ export default function EditMemberPage() {
         email: foundMember.email,
         phone: foundMember.phone,
         status: foundMember.status,
-      })
+      });
       if (foundMember.photo) {
-        setPhotoPreview(foundMember.photo)
+        setPhotoPreview(foundMember.photo);
       }
     }
-  }, [memberId])
+  }, [memberId]);
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }))
+    setFormData((prev) => ({ ...prev, [field]: value }));
     if (errors[field]) {
-      setErrors((prev) => ({ ...prev, [field]: "" }))
+      setErrors((prev) => ({ ...prev, [field]: "" }));
     }
-  }
-
+  };
   const handleFileSelect = (file: File) => {
     if (file.type.startsWith("image/")) {
-      setPhoto(file)
-      const reader = new FileReader()
+      setPhoto(file);
+      setPhotoError(null); // limpiar error anterior
+      const reader = new FileReader();
       reader.onload = (e) => {
-        setPhotoPreview(e.target?.result as string)
-      }
-      reader.readAsDataURL(file)
+        setPhotoPreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    } else {
+      setPhoto(null);
+      setPhotoPreview(null);
+      setPhotoError("El archivo debe ser una imagen (jpg, png, etc.)");
     }
-  }
+  };
 
   const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault()
-    setIsDragOver(false)
-    const files = Array.from(e.dataTransfer.files)
+    e.preventDefault();
+    setIsDragOver(false);
+    const files = Array.from(e.dataTransfer.files);
     if (files.length > 0) {
-      handleFileSelect(files[0])
+      handleFileSelect(files[0]);
     }
-  }
+  };
 
   const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files
+    const files = e.target.files;
     if (files && files.length > 0) {
-      handleFileSelect(files[0])
+      handleFileSelect(files[0]);
     }
-  }
+  };
 
   const removePhoto = () => {
-    setPhoto(null)
-    setPhotoPreview(null)
-  }
+    setPhoto(null);
+    setPhotoPreview(null);
+  };
 
   const validateForm = () => {
-    const newErrors: Record<string, string> = {}
+    const newErrors: Record<string, string> = {};
 
-    if (!formData.dni.trim()) newErrors.dni = "El DNI es obligatorio"
-    if (!formData.firstName.trim()) newErrors.firstName = "El nombre es obligatorio"
-    if (!formData.lastName.trim()) newErrors.lastName = "El apellido es obligatorio"
-    if (!formData.email.trim()) newErrors.email = "El email es obligatorio"
-    else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = "Email inválido"
-    if (!formData.phone.trim()) newErrors.phone = "El teléfono es obligatorio"
+    if (!formData.dni.trim()) {
+      newErrors.dni = "El DNI es obligatorio";
+    } else if (!/^\d{8}$/.test(formData.dni)) {
+      newErrors.dni =
+        "El DNI debe contener exactamente 8 dígitos sin puntos ni letras";
+    }
+    if (!formData.firstName.trim())
+      newErrors.firstName = "El nombre es obligatorio";
+    if (!formData.lastName.trim())
+      newErrors.lastName = "El apellido es obligatorio";
+    if (formData.email.trim() && !/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = "Email inválido";
+    }
+    if (formData.phone.trim() && !/^\d+$/.test(formData.phone)) {
+      newErrors.phone = "El teléfono solo debe contener números";
+    }
 
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
+    if (!photo) {
+      newErrors.photo = "La foto es obligatoria";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     if (validateForm()) {
       // Here you would typically update in database
-      console.log("Updating member:", formData, photo)
-      router.push("/dashboard/members")
+      console.log("Updating member:", formData, photo);
+      router.push("/socios");
     }
-  }
+  };
 
   if (!member) {
-    return <div>Cargando...</div>
+    return <div>Cargando...</div>;
   }
 
   return (
@@ -177,8 +202,8 @@ export default function EditMemberPage() {
                   }`}
                   onDrop={handleDrop}
                   onDragOver={(e) => {
-                    e.preventDefault()
-                    setIsDragOver(true)
+                    e.preventDefault();
+                    setIsDragOver(true);
                   }}
                   onDragLeave={() => setIsDragOver(false)}
                 >
@@ -203,13 +228,25 @@ export default function EditMemberPage() {
                     <div className="space-y-4">
                       <Upload className="h-12 w-12 text-muted-foreground mx-auto" />
                       <div>
-                        <p className="text-sm text-muted-foreground mb-2">Arrastra una imagen aquí o</p>
+                        <p className="text-sm text-muted-foreground mb-2">
+                          Arrastra una imagen aquí o
+                        </p>
                         <Button type="button" variant="outline" asChild>
                           <label className="cursor-pointer">
                             Seleccionar archivo
-                            <input type="file" accept="image/*" className="hidden" onChange={handleFileInput} />
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={handleFileInput}
+                            />
                           </label>
                         </Button>
+                        {photoError && (
+                          <p className="text-sm text-destructive mt-2">
+                            {photoError}
+                          </p>
+                        )}
                       </div>
                     </div>
                   )}
@@ -225,7 +262,9 @@ export default function EditMemberPage() {
                     onChange={(e) => handleInputChange("dni", e.target.value)}
                     className={errors.dni ? "border-destructive" : ""}
                   />
-                  {errors.dni && <p className="text-sm text-destructive">{errors.dni}</p>}
+                  {errors.dni && (
+                    <p className="text-sm text-destructive">{errors.dni}</p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -233,10 +272,16 @@ export default function EditMemberPage() {
                   <Input
                     id="firstName"
                     value={formData.firstName}
-                    onChange={(e) => handleInputChange("firstName", e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("firstName", e.target.value)
+                    }
                     className={errors.firstName ? "border-destructive" : ""}
                   />
-                  {errors.firstName && <p className="text-sm text-destructive">{errors.firstName}</p>}
+                  {errors.firstName && (
+                    <p className="text-sm text-destructive">
+                      {errors.firstName}
+                    </p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -244,14 +289,20 @@ export default function EditMemberPage() {
                   <Input
                     id="lastName"
                     value={formData.lastName}
-                    onChange={(e) => handleInputChange("lastName", e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("lastName", e.target.value)
+                    }
                     className={errors.lastName ? "border-destructive" : ""}
                   />
-                  {errors.lastName && <p className="text-sm text-destructive">{errors.lastName}</p>}
+                  {errors.lastName && (
+                    <p className="text-sm text-destructive">
+                      {errors.lastName}
+                    </p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email *</Label>
+                  <Label htmlFor="email">Email</Label>
                   <Input
                     id="email"
                     type="email"
@@ -259,25 +310,31 @@ export default function EditMemberPage() {
                     onChange={(e) => handleInputChange("email", e.target.value)}
                     className={errors.email ? "border-destructive" : ""}
                   />
-                  {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
+                  {errors.email && (
+                    <p className="text-sm text-destructive">{errors.email}</p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="phone">Teléfono *</Label>
+                  <Label htmlFor="phone">Teléfono</Label>
                   <Input
                     id="phone"
                     value={formData.phone}
                     onChange={(e) => handleInputChange("phone", e.target.value)}
                     className={errors.phone ? "border-destructive" : ""}
                   />
-                  {errors.phone && <p className="text-sm text-destructive">{errors.phone}</p>}
+                  {errors.phone && (
+                    <p className="text-sm text-destructive">{errors.phone}</p>
+                  )}
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="status">Estado</Label>
                   <Select
                     value={formData.status}
-                    onValueChange={(value: "active" | "inactive") => handleInputChange("status", value)}
+                    onValueChange={(value: "active" | "inactive") =>
+                      handleInputChange("status", value)
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -291,10 +348,17 @@ export default function EditMemberPage() {
               </div>
 
               <div className="flex gap-4 pt-6">
-                <Button type="submit" className="bg-primary hover:bg-primary/90">
+                <Button
+                  type="submit"
+                  className="bg-primary hover:bg-primary/90"
+                >
                   Guardar Cambios
                 </Button>
-                <Button type="button" variant="outline" onClick={() => router.push("/dashboard/members")}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => router.push("/dashboard/members")}
+                >
                   Cancelar
                 </Button>
               </div>
@@ -303,5 +367,5 @@ export default function EditMemberPage() {
         </Card>
       </div>
     </div>
-  )
+  );
 }

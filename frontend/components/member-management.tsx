@@ -152,7 +152,7 @@ export function MemberManagement() {
                 className="pl-10 rounded-lg border-border focus:ring-primary focus:border-primary"
               />
             </div>
-            <Link href="/dashboard/members/create">
+            <Link href="/socios/crear">
               <Button className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg">
                 <Plus className="h-4 w-4 mr-2" />
                 Crear Socio
@@ -219,7 +219,7 @@ export function MemberManagement() {
                     </Badge>
 
                     <div className="flex gap-2">
-                      <Link href={`/dashboard/members/${member.id}/edit`}>
+                      <Link href={`/socios/${member.id}/edit`}>
                         <Button
                           variant="outline"
                           size="sm"

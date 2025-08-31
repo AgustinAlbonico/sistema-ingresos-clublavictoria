@@ -25,7 +25,7 @@ export function Sidebar({ onClose }: SidebarProps) {
   }
 
   return (
-    <div className="flex flex-col h-full bg-sidebar bg-black">
+    <div className="flex flex-col h-full bg-sidebar">
       {/* Header */}
       <div className="flex items-center justify-between p-6 border-b border-sidebar-border">
         <div className="flex items-center gap-3">
