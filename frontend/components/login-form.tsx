@@ -11,9 +11,9 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Eye, EyeOff, LogIn } from "lucide-react"
 
 export function LoginForm() {
-  const [showPassword, setShowPassword] = useState(false)
   const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
+  const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
 

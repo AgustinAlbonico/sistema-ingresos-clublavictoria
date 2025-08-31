@@ -1,12 +1,20 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Search, Plus, Edit, Trash2, User, ChevronLeft, ChevronRight } from "lucide-react"
-import Link from "next/link"
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import {
+  Search,
+  Plus,
+  Edit,
+  Trash2,
+  User,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
+import Link from "next/link";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,17 +25,17 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
+} from "@/components/ui/alert-dialog";
 
 interface Member {
-  id: string
-  dni: string
-  firstName: string
-  lastName: string
-  email: string
-  phone: string
-  status: "active" | "inactive"
-  photo?: string
+  id: string;
+  dni: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  status: "active" | "inactive";
+  photo?: string;
 }
 
 const mockMembers: Member[] = [
@@ -103,43 +111,54 @@ const mockMembers: Member[] = [
     phone: "+34 600 777 888",
     status: "active",
   },
-]
+];
 
 export function MemberManagement() {
-  const [members, setMembers] = useState<Member[]>(mockMembers)
-  const [searchTerm, setSearchTerm] = useState("")
-  const [currentPage, setCurrentPage] = useState(1)
-  const membersPerPage = 5
+  const [members, setMembers] = useState<Member[]>(mockMembers);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const membersPerPage = 5;
 
   // Filter members based on search term
   const filteredMembers = members
     .filter(
       (member) =>
-        `${member.firstName} ${member.lastName}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        `${member.firstName} ${member.lastName}`
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase()) ||
         member.dni.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        member.email.toLowerCase().includes(searchTerm.toLowerCase()),
+        member.email.toLowerCase().includes(searchTerm.toLowerCase())
     )
-    .sort((a, b) => `${a.lastName}, ${a.firstName}`.localeCompare(`${b.lastName}, ${b.firstName}`))
+    .sort((a, b) =>
+      `${a.lastName}, ${a.firstName}`.localeCompare(
+        `${b.lastName}, ${b.firstName}`
+      )
+    );
 
-  const totalPages = Math.ceil(filteredMembers.length / membersPerPage)
-  const startIndex = (currentPage - 1) * membersPerPage
-  const paginatedMembers = filteredMembers.slice(startIndex, startIndex + membersPerPage)
+  const totalPages = Math.ceil(filteredMembers.length / membersPerPage);
+  const startIndex = (currentPage - 1) * membersPerPage;
+  const paginatedMembers = filteredMembers.slice(
+    startIndex,
+    startIndex + membersPerPage
+  );
 
   const handleSearchChange = (value: string) => {
-    setSearchTerm(value)
-    setCurrentPage(1)
-  }
+    setSearchTerm(value);
+    setCurrentPage(1);
+  };
 
   const handleDeleteMember = (memberId: string) => {
-    setMembers(members.filter((member) => member.id !== memberId))
-  }
+    setMembers(members.filter((member) => member.id !== memberId));
+  };
 
   return (
     <div className="space-y-6">
       {/* Search and Create Section */}
       <Card className="shadow-sm border-border">
         <CardHeader>
-          <CardTitle className="text-lg text-foreground">Buscar y Gestionar Socios</CardTitle>
+          <CardTitle className="text-lg text-foreground">
+            Buscar y Gestionar Socios
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex flex-col sm:flex-row gap-4">
@@ -153,7 +172,7 @@ export function MemberManagement() {
               />
             </div>
             <Link href="/socios/crear">
-              <Button className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg">
+              <Button className="bg-primary hover:bg-primary/85 text-primary-foreground rounded-lg">
                 <Plus className="h-4 w-4 mr-2" />
                 Crear Socio
               </Button>
@@ -166,7 +185,9 @@ export function MemberManagement() {
       <Card className="shadow-sm border-border">
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle className="text-lg text-foreground">Lista de Socios ({filteredMembers.length})</CardTitle>
+            <CardTitle className="text-lg text-foreground">
+              Lista de Socios ({filteredMembers.length})
+            </CardTitle>
             {totalPages > 1 && (
               <p className="text-sm text-muted-foreground">
                 Página {currentPage} de {totalPages}
@@ -180,7 +201,9 @@ export function MemberManagement() {
               <div className="text-center py-8">
                 <User className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                 <p className="text-muted-foreground">
-                  {searchTerm ? "No se encontraron socios" : "No hay socios registrados"}
+                  {searchTerm
+                    ? "No se encontraron socios"
+                    : "No hay socios registrados"}
                 </p>
               </div>
             ) : (
@@ -205,15 +228,25 @@ export function MemberManagement() {
                       <h3 className="font-semibold text-foreground">
                         {member.lastName}, {member.firstName}
                       </h3>
-                      <p className="text-sm text-muted-foreground">DNI: {member.dni}</p>
-                      <p className="text-sm text-muted-foreground">{member.email}</p>
+                      <p className="text-sm text-muted-foreground">
+                        DNI: {member.dni}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        {member.email}
+                      </p>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-3">
                     <Badge
-                      variant={member.status === "active" ? "default" : "secondary"}
-                      className={member.status === "active" ? "bg-primary text-primary-foreground" : ""}
+                      variant={
+                        member.status === "active" ? "default" : "secondary"
+                      }
+                      className={
+                        member.status === "active"
+                          ? "bg-primary text-primary-foreground"
+                          : ""
+                      }
                     >
                       {member.status === "active" ? "Activo" : "Inactivo"}
                     </Badge>
@@ -241,9 +274,12 @@ export function MemberManagement() {
                         </AlertDialogTrigger>
                         <AlertDialogContent>
                           <AlertDialogHeader>
-                            <AlertDialogTitle>¿Eliminar socio?</AlertDialogTitle>
+                            <AlertDialogTitle>
+                              ¿Eliminar socio?
+                            </AlertDialogTitle>
                             <AlertDialogDescription>
-                              Esta acción no se puede deshacer. Se eliminará permanentemente el socio {member.firstName}{" "}
+                              Esta acción no se puede deshacer. Se eliminará
+                              permanentemente el socio {member.firstName}{" "}
                               {member.lastName} del sistema.
                             </AlertDialogDescription>
                           </AlertDialogHeader>
@@ -268,8 +304,9 @@ export function MemberManagement() {
           {totalPages > 1 && (
             <div className="flex items-center justify-between mt-6 pt-4 border-t border-border">
               <p className="text-sm text-muted-foreground">
-                Mostrando {startIndex + 1} a {Math.min(startIndex + membersPerPage, filteredMembers.length)} de{" "}
-                {filteredMembers.length} socios
+                Mostrando {startIndex + 1} a{" "}
+                {Math.min(startIndex + membersPerPage, filteredMembers.length)}{" "}
+                de {filteredMembers.length} socios
               </p>
               <div className="flex items-center gap-2">
                 <Button
@@ -299,5 +336,5 @@ export function MemberManagement() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

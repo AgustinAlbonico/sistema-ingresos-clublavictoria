@@ -107,7 +107,7 @@ export function SeasonManagement() {
             <CardTitle className="text-lg text-foreground">Temporadas del Club</CardTitle>
             <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
               <DialogTrigger asChild>
-                <Button className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg">
+                <Button className="bg-primary hover:bg-primary/85 text-primary-foreground rounded-lg">
                   <Plus className="h-4 w-4 mr-2" />
                   Crear Temporada
                 </Button>

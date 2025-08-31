@@ -17,22 +17,47 @@ import {
 } from "@/components/ui/select";
 import { ArrowLeft, Upload, X } from "lucide-react";
 import Link from "next/link";
+import { PhotoCropper } from "@/components/photo-cropper";
 
 export default function CreateMemberPage() {
   const router = useRouter();
+
   const [formData, setFormData] = useState({
     dni: "",
-    firstName: "", // separated name into firstName and lastName
-    lastName: "",
+    nombre: "",
+    apellido: "",
+    direccion: "",
     email: "",
-    phone: "",
-    status: "active" as "active" | "inactive",
+    telefono: "",
+    fechaDeNacimiento: "",
+    sexo: "" as "M" | "F",
   });
   const [photo, setPhoto] = useState<File | null>(null);
   const [photoError, setPhotoError] = useState<string | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const [cropSrc, setCropSrc] = useState<string | null>(null);
+
+  function dataURLtoFile(dataurl: string, filename: string) {
+    const arr = dataurl.split(",");
+    const mime = arr[0].match(/:(.*?);/)![1];
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    while (n--) u8arr[n] = bstr.charCodeAt(n);
+    return new File([u8arr], filename, { type: mime });
+  }
+
+  function downloadImage(dataUrl: string, filename: string) {
+    const link = document.createElement("a");
+    link.href = dataUrl;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -44,10 +69,10 @@ export default function CreateMemberPage() {
   const handleFileSelect = (file: File) => {
     if (file.type.startsWith("image/")) {
       setPhoto(file);
-      setPhotoError(null); // limpiar error anterior
+      setPhotoError(null);
       const reader = new FileReader();
       reader.onload = (e) => {
-        setPhotoPreview(e.target?.result as string);
+        setCropSrc(e.target?.result as string); // abrir modal para crop
       };
       reader.readAsDataURL(file);
     } else {
@@ -87,19 +112,27 @@ export default function CreateMemberPage() {
       newErrors.dni =
         "El DNI debe contener exactamente 8 dígitos sin puntos ni letras";
     }
-    if (!formData.firstName.trim())
-      newErrors.firstName = "El nombre es obligatorio";
-    if (!formData.lastName.trim())
-      newErrors.lastName = "El apellido es obligatorio";
+
+    if (!formData.nombre.trim()) newErrors.nombre = "El nombre es obligatorio";
+
+    if (!formData.apellido.trim())
+      newErrors.apellido = "El apellido es obligatorio";
+
+    if(!formData.fechaDeNacimiento.trim())
+      newErrors.fechaDeNacimiento = "La fecha de nacimiento es obligatoria";
+
+    if (!formData.direccion.trim())
+      newErrors.direccion = "La dirección es obligatoria";
+
     if (formData.email.trim() && !/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = "Email inválido";
     }
-    if (formData.phone.trim() && !/^\d+$/.test(formData.phone)) {
-      newErrors.phone = "El teléfono solo debe contener números";
+    if (formData.telefono.trim() && !/^\d+$/.test(formData.telefono)) {
+      newErrors.telefono = "El teléfono solo debe contener números";
     }
 
-    if (!photo) {
-      newErrors.photo = "La foto es obligatoria";
+    if (!formData.sexo) {
+      newErrors.sexo = "El sexo es obligatorio";
     }
 
     setErrors(newErrors);
@@ -109,20 +142,16 @@ export default function CreateMemberPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (validateForm()) {
-      // Here you would typically save to database
       console.log("Creating member:", formData, photo);
-      router.push("/socios");
+      // router.push("/socios");
     }
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      {" "}
-      {/* added proper background and min-height */}
-      <div className="container mx-auto px-4 py-6 max-w-4xl">
-        {" "}
-        {/* improved container styling */}
+    <div className="min-h-screen flex items-center">
+      <div className="container mx-auto px-4 max-w-4xl">
         <Card className="w-full">
+          {/* Cabecera de la card */}
           <div className="flex justify-between items-center gap-4 mb-6 px-6">
             <Link href="/socios">
               <Button variant="outline" size="sm">
@@ -133,16 +162,19 @@ export default function CreateMemberPage() {
             <h1 className="text-2xl font-bold text-foreground text-center">
               Crear Nuevo Socio
             </h1>
-            <div></div>
-          </div>{" "}
-          {/* removed max-width constraint */}
+            <Button variant="outline" size="sm" className="invisible">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Volver
+            </Button>
+          </div>
+
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Photo Upload */}
               <div className="space-y-2">
                 <Label>Foto del Socio</Label>
                 <div
-                  className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
+                  className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors opacity-0${
                     isDragOver ? "border-primary bg-primary/5" : "border-border"
                   }`}
                   onDrop={handleDrop}
@@ -155,7 +187,7 @@ export default function CreateMemberPage() {
                   {photoPreview ? (
                     <div className="relative inline-block">
                       <img
-                        src={photoPreview || "/placeholder.svg"}
+                        src={photoPreview}
                         alt="Preview"
                         className="w-32 h-32 rounded-full object-cover mx-auto"
                       />
@@ -213,37 +245,67 @@ export default function CreateMemberPage() {
                   )}
                 </div>
                 <div className="space-y-2">
-                  {/* separated firstName field */}
-                  <Label htmlFor="firstName">Nombre *</Label>
+                  <Label htmlFor="nombre">Nombre *</Label>
                   <Input
-                    id="firstName"
-                    value={formData.firstName}
+                    id="nombre"
+                    value={formData.nombre}
                     onChange={(e) =>
-                      handleInputChange("firstName", e.target.value)
+                      handleInputChange("nombre", e.target.value)
                     }
-                    className={errors.firstName ? "border-destructive" : ""}
+                    className={errors.nombre ? "border-destructive" : ""}
                   />
-                  {errors.firstName && (
+                  {errors.nombre && (
+                    <p className="text-sm text-destructive">{errors.nombre}</p>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="apellido">Apellido *</Label>
+                  <Input
+                    id="apellido"
+                    value={formData.apellido}
+                    onChange={(e) =>
+                      handleInputChange("apellido", e.target.value)
+                    }
+                    className={errors.apellido ? "border-destructive" : ""}
+                  />
+                  {errors.apellido && (
                     <p className="text-sm text-destructive">
-                      {errors.firstName}
+                      {errors.apellido}
                     </p>
                   )}
                 </div>
                 <div className="space-y-2">
-                  {" "}
-                  {/* added lastName field */}
-                  <Label htmlFor="lastName">Apellido *</Label>
+                  <Label htmlFor="fechaDeNacimiento">
+                    Fecha de nacimiento *
+                  </Label>
                   <Input
-                    id="lastName"
-                    value={formData.lastName}
+                    id="fechaDeNacimiento"
+                    type="date"
+                    value={formData.fechaDeNacimiento}
                     onChange={(e) =>
-                      handleInputChange("lastName", e.target.value)
+                      handleInputChange("fechaDeNacimiento", e.target.value)
                     }
-                    className={errors.lastName ? "border-destructive" : ""}
+                    className={errors.telefono ? "border-destructive" : ""}
                   />
-                  {errors.lastName && (
+                  {errors.fechaDeNacimiento && (
                     <p className="text-sm text-destructive">
-                      {errors.lastName}
+                      {errors.fechaDeNacimiento}
+                    </p>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="direccion">Dirección *</Label>
+                  <Input
+                    id="text"
+                    value={formData.direccion}
+                    onChange={(e) =>
+                      handleInputChange("direccion", e.target.value)
+                    }
+                    className={errors.direccion ? "border-destructive" : ""}
+                  />
+                  {errors.direccion && (
+                    <p className="text-sm text-destructive">
+                      {errors.direccion}
                     </p>
                   )}
                 </div>
@@ -261,49 +323,56 @@ export default function CreateMemberPage() {
                   )}
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="phone">Teléfono</Label>
+                  <Label htmlFor="telefono">Teléfono</Label>
                   <Input
-                    id="phone"
-                    value={formData.phone}
-                    onChange={(e) => handleInputChange("phone", e.target.value)}
-                    className={errors.phone ? "border-destructive" : ""}
+                    id="telefono"
+                    value={formData.telefono}
+                    onChange={(e) =>
+                      handleInputChange("telefono", e.target.value)
+                    }
+                    className={errors.telefono ? "border-destructive" : ""}
                   />
-                  {errors.phone && (
-                    <p className="text-sm text-destructive">{errors.phone}</p>
+                  {errors.telefono && (
+                    <p className="text-sm text-destructive">
+                      {errors.telefono}
+                    </p>
                   )}
                 </div>
+
                 <div className="space-y-2">
-                  <Label htmlFor="status">Estado</Label>
+                  <Label htmlFor="sexo">Sexo *</Label>
                   <Select
-                    value={formData.status}
-                    onValueChange={(value: "active" | "inactive") =>
-                      handleInputChange("status", value)
+                    value={formData.sexo}
+                    onValueChange={(value: "M" | "F") =>
+                      handleInputChange("sexo", value)
                     }
                   >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="active">Activo</SelectItem>
-                      <SelectItem value="inactive">Inactivo</SelectItem>
+                      <SelectItem value="M">Masculino</SelectItem>
+                      <SelectItem value="F">Femenino</SelectItem>
                     </SelectContent>
                   </Select>
+                  {errors.sexo && (
+                    <p className="text-sm text-destructive">{errors.sexo}</p>
+                  )}
                 </div>
               </div>
 
               <div className="flex gap-4 pt-6">
-                {" "}
-                {/* increased top padding */}
                 <Button
                   type="submit"
-                  className="bg-primary hover:bg-primary/90"
+                  className="bg-primary hover:bg-primary/85"
                 >
                   Crear Socio
                 </Button>
                 <Button
                   type="button"
-                  variant="outline"
+                  variant="ghost"
                   onClick={() => router.push("/socios")}
+                  className="hover:bg-destructive"
                 >
                   Cancelar
                 </Button>
@@ -312,6 +381,19 @@ export default function CreateMemberPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Modal Crop */}
+      {cropSrc && (
+        <PhotoCropper
+          imageSrc={cropSrc}
+          onCancel={() => setCropSrc(null)}
+          onSave={(cropped) => {
+            setPhotoPreview(cropped); // preview ya recortado
+            setPhotoError(null);
+            setCropSrc(null);
+          }}
+        />
+      )}
     </div>
   );
 }
