@@ -143,7 +143,7 @@ export default function CreateMemberPage() {
     e.preventDefault();
     if (validateForm()) {
       console.log("Creating member:", formData, photo);
-      // router.push("/socios");
+      router.push("/socios");
     }
   };
 

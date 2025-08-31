@@ -1,43 +1,55 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Eye, EyeOff, LogIn } from "lucide-react"
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Eye, EyeOff, LogIn } from "lucide-react";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 export function LoginForm() {
-  const [username, setUsername] = useState("")
-  const [password, setPassword] = useState("")
-  const [showPassword, setShowPassword] = useState(false)
-  const [error, setError] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError("")
-    setIsLoading(true)
+    e.preventDefault();
+    setError("");
+    setIsLoading(true);
 
     // Simulate login process
     setTimeout(() => {
       if (username === "admin" && password === "admin") {
         // Redirect to dashboard (for now just show success)
-        window.location.href = "/socios"
+        router.push("/socios")
+        toast.success("Sesión iniciada correctamente", {
+          duration: 3000,
+          position: "top-center",
+        });
       } else {
-        setError("Credenciales incorrectas. Verifique su usuario y contraseña.")
+        setError(
+          "Credenciales incorrectas. Verifique su usuario y contraseña."
+        );
       }
-      setIsLoading(false)
-    }, 1000)
-  }
+      setIsLoading(false);
+    }, 1000);
+  };
 
   return (
     <Card className="shadow-lg border-border">
       <CardHeader className="space-y-1">
-        <CardTitle className="text-2xl font-bold text-center text-foreground">Iniciar Sesión</CardTitle>
+        <CardTitle className="text-2xl font-bold text-center text-foreground">
+          Iniciar Sesión
+        </CardTitle>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -110,8 +122,7 @@ export function LoginForm() {
             )}
           </Button>
         </form>
-
       </CardContent>
     </Card>
-  )
+  );
 }
