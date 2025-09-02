@@ -99,16 +99,6 @@ export function MemberManagement() {
     startIndex + membersPerPage
   );
 
-  // Eliminar funciones manuales - ahora usa el hook
-  // const handleSearchChange = (value: string) => {
-  //   setSearchTerm(value);
-  //   setCurrentPage(1);
-  // };
-
-  // const clearSearch = () => {
-  //   setSearchTerm("");
-  //   setCurrentPage(1);
-  // };
 
   // TODO: Cuando se implemente la API, esta función debería hacer una llamada DELETE
   const handleDeleteMember = async (memberId: string) => {
@@ -127,13 +117,6 @@ export function MemberManagement() {
   const handleMembersPerPageChange = (value: string) => {
     setMembersPerPage(parseInt(value));
     setCurrentPage(1);
-
-    // TODO: Cuando se implemente la API, debería hacer una nueva llamada
-    // con el nuevo límite por página
-    /*
-    // Esto se haría automáticamente en el useEffect de carga de datos
-    // cuando cambie membersPerPage o currentPage
-    */
   };
 
   return (

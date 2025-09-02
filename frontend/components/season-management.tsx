@@ -26,11 +26,26 @@ import {
 import { toast } from "sonner";
 import { Season } from "@/lib/types";
 import { getMockSeasons } from "@/lib/mock-data";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useEffect } from "react";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 export function SeasonManagement() {
-  const [seasons, setSeasons] = useState<Season[]>(getMockSeasons());
+  const [seasons, setSeasons] = useState<Season[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [editingSeason, setEditingSeason] = useState<Season | null>(null);
+
+  // Simular carga inicial de datos (llamada a API)
+  useEffect(() => {
+    setIsLoading(true);
+    const loadSeasons = async () => {
+      await new Promise((resolve) => setTimeout(resolve, 1200)); // Simula delay de API
+      setSeasons(getMockSeasons());
+      setIsLoading(false);
+    };
+    loadSeasons();
+  }, []);
 
   const handleCreateSeason = (seasonData: Omit<Season, 'id'>) => {
     const newSeason: Season = {
@@ -115,7 +130,12 @@ export function SeasonManagement() {
 
       {/* Lista de temporadas */}
       <div className="grid gap-4">
-        {seasons.length === 0 ? (
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center py-16">
+            <LoadingSpinner size="lg" />
+            <p className="mt-4 text-sm text-muted-foreground">Cargando temporadas...</p>
+          </div>
+        ) : seasons.length === 0 ? (
           <Card>
             <CardContent className="text-center py-8">
               <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />

@@ -22,7 +22,7 @@ export const PAGINATION = {
 
 // Configuración de búsqueda
 export const SEARCH = {
-  DEBOUNCE_DELAY: 3000, // milisegundos
+  DEBOUNCE_DELAY: 300, // milisegundos
   MIN_SEARCH_LENGTH: 2
 } as const;
 

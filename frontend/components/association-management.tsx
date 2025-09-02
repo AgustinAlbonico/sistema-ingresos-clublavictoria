@@ -57,6 +57,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 // Importar tipos y datos centralizados
 import { Season, Association } from "@/lib/types";
@@ -70,6 +71,7 @@ export function AssociationManagement() {
     useState<Association[]>(mockAssociations);
   const [selectedSeason, setSelectedSeason] = useState<string>("");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Estados para paginación de socios asociados
   const [currentPage, setCurrentPage] = useState(1);
@@ -115,6 +117,16 @@ export function AssociationManagement() {
       setSelectedSeason(sortedSeasons[0].id);
     }
   }, [seasons]);
+
+  // Simular carga de asociaciones al cambiar de temporada
+  useEffect(() => {
+    setIsLoading(true);
+    const loadAssociations = async () => {
+      await new Promise((resolve) => setTimeout(resolve, 1200)); // Simula delay de API
+      setIsLoading(false);
+    };
+    loadAssociations();
+  }, [selectedSeason]);
 
   const getSeasonMembers = () => {
     if (!selectedSeason) return [];
@@ -313,437 +325,446 @@ export function AssociationManagement() {
         </CardContent>
       </Card>
 
-      {/* Season Members Display */}
-      {selectedSeason && selectedSeasonObj && (
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <CardTitle className="text-xl">
-                  {selectedSeasonObj.name}
-                </CardTitle>
-                <CardDescription>
-                  {formatDate(selectedSeasonObj.startDate)} -{" "}
-                  {formatDate(selectedSeasonObj.endDate)}
-                </CardDescription>
-              </div>
-              <div className="flex items-center gap-3">
-                <Badge
-                  variant={isSeasonEnded ? "secondary" : "default"}
-                  className="opacity- hidden sm:block"
-                >
-                  {isSeasonEnded
-                    ? "Finalizada"
-                    : isSeasonFuture
-                    ? "Futura"
-                    : "Temporada Activa"}
-                </Badge>
-                {canManageMembers && (
-                  <Dialog
-                    open={isAddDialogOpen}
-                    onOpenChange={setIsAddDialogOpen}
-                  >
-                    <DialogTrigger asChild>
-                      <Button>
-                        <UserPlus className="h-4 w-4 mr-2" />
-                        Agregar Socios
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="w-[calc(100vw-2rem)] sm:mx-auto  sm:w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
-                      <DialogHeader>
-                        <DialogTitle>
-                          Agregar Socios a {selectedSeasonObj.name}
-                        </DialogTitle>
-                        <DialogDescription>
-                          Busca y selecciona los socios que deseas agregar a
-                          esta temporada
-                        </DialogDescription>
-                      </DialogHeader>
+      {isLoading ? (
+        <div className="flex flex-col items-center justify-center py-16">
+          <LoadingSpinner size="lg" />
+          <p className="mt-4 text-sm text-muted-foreground">Cargando asociaciones...</p>
+        </div>
+      ) : (
+        <>
+          {/* Season Members Display */}
+          {selectedSeason && selectedSeasonObj && (
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <CardTitle className="text-xl">
+                      {selectedSeasonObj.name}
+                    </CardTitle>
+                    <CardDescription>
+                      {formatDate(selectedSeasonObj.startDate)} -{" "}
+                      {formatDate(selectedSeasonObj.endDate)}
+                    </CardDescription>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Badge
+                      variant={isSeasonEnded ? "secondary" : "default"}
+                      className="opacity- hidden sm:block"
+                    >
+                      {isSeasonEnded
+                        ? "Finalizada"
+                        : isSeasonFuture
+                        ? "Futura"
+                        : "Temporada Activa"}
+                    </Badge>
+                    {canManageMembers && (
+                      <Dialog
+                        open={isAddDialogOpen}
+                        onOpenChange={setIsAddDialogOpen}
+                      >
+                        <DialogTrigger asChild>
+                          <Button>
+                            <UserPlus className="h-4 w-4 mr-2" />
+                            Agregar Socios
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="w-[calc(100vw-2rem)] sm:mx-auto  sm:w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+                          <DialogHeader>
+                            <DialogTitle>
+                              Agregar Socios a {selectedSeasonObj.name}
+                            </DialogTitle>
+                            <DialogDescription>
+                              Busca y selecciona los socios que deseas agregar a
+                              esta temporada
+                            </DialogDescription>
+                          </DialogHeader>
 
-                      <div className="flex-1 overflow-hidden flex flex-col">
-                        {/* Search */}
-                        <div className="p-4 border-b">
-                          <div className="relative">
-                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                            <Input
-                              placeholder="Buscar socios disponibles..."
-                              value={availableSearchTerm}
-                              onChange={(e) =>
-                                setAvailableSearchTerm(e.target.value)
-                              }
-                              className="pl-10"
-                            />
-                          </div>
-                        </div>
+                          <div className="flex-1 overflow-hidden flex flex-col">
+                            {/* Search */}
+                            <div className="p-4 border-b">
+                              <div className="relative">
+                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                                <Input
+                                  placeholder="Buscar socios disponibles..."
+                                  value={availableSearchTerm}
+                                  onChange={(e) =>
+                                    setAvailableSearchTerm(e.target.value)
+                                  }
+                                  className="pl-10"
+                                />
+                              </div>
+                            </div>
 
-                        {/* Available Members List */}
-                        <div className="flex-1 overflow-y-auto">
-                          {isLoadingMembers ? (
-                            <div className="p-4 text-center">
-                              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-                              <p className="mt-2 text-sm text-muted-foreground">
-                                Cargando socios...
-                              </p>
-                            </div>
-                          ) : membersError ? (
-                            <div className="p-4 text-center text-destructive">
-                              <p>Error al cargar socios: {membersError}</p>
-                            </div>
-                          ) : availableMembers.length === 0 ? (
-                            <div className="p-4 text-center">
-                              <Users className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
-                              <p className="text-muted-foreground">
-                                {availableSearchTerm
-                                  ? "No se encontraron socios disponibles"
-                                  : "No hay socios disponibles para agregar"}
-                              </p>
-                            </div>
-                          ) : (
-                            <div className="p-4 space-y-3">
-                              {availableMembers.map((member) => (
-                                <div
-                                  key={member.id}
-                                  className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 border border-border rounded-lg hover:bg-muted/50 transition-colors bg-background"
-                                >
-                                  <div className="flex items-center gap-3 flex-1 min-w-0">
-                                    <div className="flex-shrink-0 w-12 h-12 bg-muted rounded-full flex items-center justify-center overflow-hidden">
-                                      {member.photo ? (
-                                        <img
-                                          src={member.photo}
-                                          alt={`${member.firstName} ${member.lastName}`}
-                                          className="w-full h-full object-cover"
-                                        />
-                                      ) : (
-                                        <User className="h-6 w-6 text-muted-foreground" />
-                                      )}
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                      <p className="font-medium text-foreground truncate">
-                                        {member.firstName} {member.lastName}
-                                      </p>
-                                      <div className="space-y-2 mt-2">
-                                        {/* DNI - Siempre visible y prominente */}
-                                        <div className="flex items-center gap-2">
-                                          <span className="text-xs font-medium text-muted-foreground bg-muted px-2 py-1 rounded">
-                                            DNI
-                                          </span>
-                                          <span className="text-sm font-mono text-foreground">
-                                            {member.dni}
-                                          </span>
+                            {/* Available Members List */}
+                            <div className="flex-1 overflow-y-auto">
+                              {isLoadingMembers ? (
+                                <div className="p-4 text-center">
+                                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                                  <p className="mt-2 text-sm text-muted-foreground">
+                                    Cargando socios...
+                                  </p>
+                                </div>
+                              ) : membersError ? (
+                                <div className="p-4 text-center text-destructive">
+                                  <p>Error al cargar socios: {membersError}</p>
+                                </div>
+                              ) : availableMembers.length === 0 ? (
+                                <div className="p-4 text-center">
+                                  <Users className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
+                                  <p className="text-muted-foreground">
+                                    {availableSearchTerm
+                                      ? "No se encontraron socios disponibles"
+                                      : "No hay socios disponibles para agregar"}
+                                  </p>
+                                </div>
+                              ) : (
+                                <div className="p-4 space-y-3">
+                                  {availableMembers.map((member) => (
+                                    <div
+                                      key={member.id}
+                                      className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 border border-border rounded-lg hover:bg-muted/50 transition-colors bg-background"
+                                    >
+                                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                                        <div className="flex-shrink-0 w-12 h-12 bg-muted rounded-full flex items-center justify-center overflow-hidden">
+                                          {member.photo ? (
+                                            <img
+                                              src={member.photo}
+                                              alt={`${member.firstName} ${member.lastName}`}
+                                              className="w-full h-full object-cover"
+                                            />
+                                          ) : (
+                                            <User className="h-6 w-6 text-muted-foreground" />
+                                          )}
                                         </div>
-                                        
-                                        {/* Email y teléfono uno encima del otro */}
-                                        {member.email && (
-                                          <div className="flex items-center gap-2">
-                                            <Mail className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                                            <span className="text-sm text-muted-foreground truncate">
-                                              {member.email}
-                                            </span>
+                                        <div className="flex-1 min-w-0">
+                                          <p className="font-medium text-foreground truncate">
+                                            {member.firstName} {member.lastName}
+                                          </p>
+                                          <div className="space-y-2 mt-2">
+                                            {/* DNI - Siempre visible y prominente */}
+                                            <div className="flex items-center gap-2">
+                                              <span className="text-xs font-medium text-muted-foreground bg-muted px-2 py-1 rounded">
+                                                DNI
+                                              </span>
+                                              <span className="text-sm font-mono text-foreground">
+                                                {member.dni}
+                                              </span>
+                                            </div>
+                                            
+                                            {/* Email y teléfono uno encima del otro */}
+                                            {member.email && (
+                                              <div className="flex items-center gap-2">
+                                                <Mail className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                                                <span className="text-sm text-muted-foreground truncate">
+                                                  {member.email}
+                                                </span>
+                                              </div>
+                                            )}
+                                            {member.phone && (
+                                              <div className="flex items-center gap-2">
+                                                <Phone className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                                                <span className="text-sm text-muted-foreground truncate">
+                                                  {member.phone}
+                                                </span>
+                                              </div>
+                                            )}
                                           </div>
-                                        )}
-                                        {member.phone && (
-                                          <div className="flex items-center gap-2">
-                                            <Phone className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                                            <span className="text-sm text-muted-foreground truncate">
-                                              {member.phone}
-                                            </span>
-                                          </div>
-                                        )}
+                                        </div>
+                                      </div>
+                                      <div className="flex-shrink-0">
+                                        <Button
+                                          onClick={() =>
+                                            handleAddMemberToSeason(member.id)
+                                          }
+                                          size="sm"
+                                          className="bg-primary hover:bg-primary/90 text-primary-foreground"
+                                        >
+                                          <Plus className="h-4 w-4 mr-2" />
+                                          Agregar
+                                        </Button>
                                       </div>
                                     </div>
-                                  </div>
-                                  <div className="flex-shrink-0">
-                                    <Button
-                                      onClick={() =>
-                                        handleAddMemberToSeason(member.id)
-                                      }
-                                      size="sm"
-                                      className="bg-primary hover:bg-primary/90 text-primary-foreground"
-                                    >
-                                      <Plus className="h-4 w-4 mr-2" />
-                                      Agregar
-                                    </Button>
-                                  </div>
+                                  ))}
                                 </div>
-                              ))}
+                              )}
                             </div>
-                          )}
-                        </div>
 
-                        {/* Pagination for available members */}
-                        {pagination && pagination.totalPages > 1 && (
-                          <div className="p-4 border-t flex items-center justify-between">
-                            <p className="text-sm text-muted-foreground">
-                              Página {pagination.currentPage} de{" "}
-                              {pagination.totalPages}
-                            </p>
-                            <div className="flex items-center gap-2">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() =>
-                                  setAvailableCurrentPage(
-                                    pagination.currentPage - 1
-                                  )
-                                }
-                                disabled={!pagination.hasPreviousPage}
-                              >
-                                <ChevronLeft className="h-4 w-4" />
-                                Anterior
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() =>
-                                  setAvailableCurrentPage(
-                                    pagination.currentPage + 1
-                                  )
-                                }
-                                disabled={!pagination.hasNextPage}
-                              >
-                                Siguiente
-                                <ChevronRight className="h-4 w-4" />
-                              </Button>
-                            </div>
+                            {/* Pagination for available members */}
+                            {pagination && pagination.totalPages > 1 && (
+                              <div className="p-4 border-t flex items-center justify-between">
+                                <p className="text-sm text-muted-foreground">
+                                  Página {pagination.currentPage} de{" "}
+                                  {pagination.totalPages}
+                                </p>
+                                <div className="flex items-center gap-2">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() =>
+                                      setAvailableCurrentPage(
+                                        pagination.currentPage - 1
+                                      )
+                                    }
+                                    disabled={!pagination.hasPreviousPage}
+                                  >
+                                    <ChevronLeft className="h-4 w-4" />
+                                    Anterior
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() =>
+                                      setAvailableCurrentPage(
+                                        pagination.currentPage + 1
+                                      )
+                                    }
+                                    disabled={!pagination.hasNextPage}
+                                  >
+                                    Siguiente
+                                    <ChevronRight className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </div>
+                            )}
                           </div>
-                        )}
-                      </div>
-                    </DialogContent>
-                  </Dialog>
-                )}
-              </div>
-            </div>
-
-            {/* Additional info for ended seasons */}
-            {isSeasonEnded && (
-              <div className="mt-4">
-                <Alert className="border-blue-200 bg-blue-50 text-blue-800">
-                  <Calendar className="h-4 w-4 text-blue-600" />
-                  <AlertDescription>
-                    Esta temporada finalizó el{" "}
-                    {formatDate(selectedSeasonObj.endDate)}. No se pueden
-                    agregar ni eliminar socios de temporadas finalizadas.
-                  </AlertDescription>
-                </Alert>
-              </div>
-            )}
-          </CardHeader>
-
-          <CardContent>
-            {/* Search Section for Season Members */}
-            <div className="mb-6">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                <Input
-                  placeholder="Buscar socios asociados por nombre, DNI o email..."
-                  value={searchTerm}
-                  onChange={(e) => handleSearchChange(e.target.value)}
-                  className="pl-10 rounded-lg border-border focus:ring-primary focus:border-primary text-sm"
-                />
-              </div>
-            </div>
-
-            {/* Season Members List */}
-            <div className="space-y-4">
-              {paginatedSeasonMembers.length === 0 ? (
-                <div className="text-center py-8">
-                  <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <p className="text-muted-foreground">
-                    {searchTerm
-                      ? "No se encontraron socios asociados"
-                      : "No hay socios asociados a esta temporada"}
-                  </p>
+                        </DialogContent>
+                      </Dialog>
+                    )}
+                  </div>
                 </div>
-              ) : (
-                paginatedSeasonMembers.map((item) => (
-                  <div
-                    key={item.id}
-                    className="flex flex-col sm:flex-row gap-3 sm:gap-4 sm:items-center sm:justify-between p-4 border border-border rounded-lg hover:bg-muted/50 transition-colors"
-                  >
-                    {/* Member Info Section */}
-                    <div className="flex justify-center sm:items-start gap-3 flex-1 min-w-0 ">
-                      {/* Avatar */}
-                      <div className="w-10 h-10 sm:w-12 sm:h-12 bg-muted rounded-full flex items-center justify-center flex-shrink-0 sm:my-auto">
-                        {item.member.photo ? (
-                          <img
-                            src={item.member.photo}
-                            alt={`${item.member.firstName} ${item.member.lastName}`}
-                            className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover"
-                          />
-                        ) : (
-                          <User className="h-5 w-5 sm:h-6 sm:w-6 text-muted-foreground" />
-                        )}
-                      </div>
 
-                      {/* Member Details */}
-                      <div className="flex flex-col justify-center sm:justify-start gap-1 flex-1 min-w-0">
-                        <div className="text-center sm:text-left">
-                          <h3 className="font-semibold text-foreground truncate">
-                            {item.member.firstName} {item.member.lastName}
-                          </h3>
-                          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm text-muted-foreground">
-                            <span className="flex items-center gap-1 justify-center sm:justify-start">
-                              <User className="h-3 w-3" />
-                              DNI: {item.member.firstName}
-                            </span>
-                            {item.member.email && (
-                              <span className="flex items-center gap-1 justify-center sm:justify-start">
-                                <Mail className="h-3 w-3" />
-                                {item.member.email}
-                              </span>
-                            )}
-                            {item.member.phone && (
-                              <span className="flex items-center gap-1 justify-center sm:justify-start">
-                                <Phone className="h-3 w-3" />
-                                {item.member.phone}
-                              </span>
+                {/* Additional info for ended seasons */}
+                {isSeasonEnded && (
+                  <div className="mt-4">
+                    <Alert className="border-blue-200 bg-blue-50 text-blue-800">
+                      <Calendar className="h-4 w-4 text-blue-600" />
+                      <AlertDescription>
+                        Esta temporada finalizó el{" "}
+                        {formatDate(selectedSeasonObj.endDate)}. No se pueden
+                        agregar ni eliminar socios de temporadas finalizadas.
+                      </AlertDescription>
+                    </Alert>
+                  </div>
+                )}
+              </CardHeader>
+
+              <CardContent>
+                {/* Search Section for Season Members */}
+                <div className="mb-6">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                    <Input
+                      placeholder="Buscar socios asociados por nombre, DNI o email..."
+                      value={searchTerm}
+                      onChange={(e) => handleSearchChange(e.target.value)}
+                      className="pl-10 rounded-lg border-border focus:ring-primary focus:border-primary text-sm"
+                    />
+                  </div>
+                </div>
+
+                {/* Season Members List */}
+                <div className="space-y-4">
+                  {paginatedSeasonMembers.length === 0 ? (
+                    <div className="text-center py-8">
+                      <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                      <p className="text-muted-foreground">
+                        {searchTerm
+                          ? "No se encontraron socios asociados"
+                          : "No hay socios asociados a esta temporada"}
+                      </p>
+                    </div>
+                  ) : (
+                    paginatedSeasonMembers.map((item) => (
+                      <div
+                        key={item.id}
+                        className="flex flex-col sm:flex-row gap-3 sm:gap-4 sm:items-center sm:justify-between p-4 border border-border rounded-lg hover:bg-muted/50 transition-colors"
+                      >
+                        {/* Member Info Section */}
+                        <div className="flex justify-center sm:items-start gap-3 flex-1 min-w-0 ">
+                          {/* Avatar */}
+                          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-muted rounded-full flex items-center justify-center flex-shrink-0 sm:my-auto">
+                            {item.member.photo ? (
+                              <img
+                                src={item.member.photo}
+                                alt={`${item.member.firstName} ${item.member.lastName}`}
+                                className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover"
+                              />
+                            ) : (
+                              <User className="h-5 w-5 sm:h-6 sm:w-6 text-muted-foreground" />
                             )}
                           </div>
+
+                          {/* Member Details */}
+                          <div className="flex flex-col justify-center sm:justify-start gap-1 flex-1 min-w-0">
+                            <div className="text-center sm:text-left">
+                              <h3 className="font-semibold text-foreground truncate">
+                                {item.member.firstName} {item.member.lastName}
+                              </h3>
+                              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm text-muted-foreground">
+                                <span className="flex items-center gap-1 justify-center sm:justify-start">
+                                  <User className="h-3 w-3" />
+                                  DNI: {item.member.firstName}
+                                </span>
+                                {item.member.email && (
+                                  <span className="flex items-center gap-1 justify-center sm:justify-start">
+                                    <Mail className="h-3 w-3" />
+                                    {item.member.email}
+                                  </span>
+                                )}
+                                {item.member.phone && (
+                                  <span className="flex items-center gap-1 justify-center sm:justify-start">
+                                    <Phone className="h-3 w-3" />
+                                    {item.member.phone}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    </div>
 
-                    {/* Actions Section */}
-                    <div className="flex items-center justify-between sm:justify-end gap-3 pt-2 sm:pt-0 border-t sm:border-t-0 border-border/50">
-                      <Badge
-                        variant={
-                          item.member.status === "active"
-                            ? "default"
-                            : "secondary"
-                        }
-                        className={`${
-                          item.member.status === "active"
-                            ? "bg-primary text-primary-foreground"
-                            : ""
-                        } flex-shrink-0`}
-                      >
-                        {item.member.status === "active"
-                          ? "Activo"
-                          : "Inactivo"}
-                      </Badge>
+                        {/* Actions Section */}
+                        <div className="flex items-center justify-between sm:justify-end gap-3 pt-2 sm:pt-0 border-t sm:border-t-0 border-border/50">
+                          <Badge
+                            variant={
+                              item.member.status === "active"
+                                ? "default"
+                                : "secondary"
+                            }
+                            className={`${
+                              item.member.status === "active"
+                                ? "bg-primary text-primary-foreground"
+                                : ""
+                            } flex-shrink-0`}
+                          >
+                            {item.member.status === "active"
+                              ? "Activo"
+                              : "Inactivo"}
+                          </Badge>
 
-                      <div className="flex gap-2">
-                        {canManageMembers ? (
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
+                          <div className="flex gap-2">
+                            {canManageMembers ? (
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground bg-transparent"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                    <span className="sr-only">Eliminar</span>
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent className="w-[95%] md:w-full mx-auto">
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>
+                                      ¿Eliminar socio de la temporada?
+                                    </AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      Esta acción no se puede deshacer. Se eliminará
+                                      permanentemente al socio{" "}
+                                      {item.member.firstName} {item.member.lastName}{" "}
+                                      de esta temporada.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+                                    <AlertDialogCancel className="w-full sm:w-auto">
+                                      Cancelar
+                                    </AlertDialogCancel>
+                                    <AlertDialogAction
+                                      onClick={() =>
+                                        handleRemoveAssociation(item.id)
+                                      }
+                                      className="bg-destructive hover:bg-destructive/90 text-destructive-foreground w-full sm:w-auto"
+                                    >
+                                      Eliminar
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            ) : (
                               <Button
                                 variant="outline"
                                 size="sm"
-                                className="text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground bg-transparent"
+                                disabled
+                                className="text-muted-foreground border-muted-foreground/30 bg-muted/20 cursor-not-allowed opacity-50"
                               >
                                 <Trash2 className="h-4 w-4" />
-                                <span className="sr-only">Eliminar</span>
+                                <span className="sr-only">
+                                  Eliminar (deshabilitado)
+                                </span>
                               </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent className="w-[95%] md:w-full mx-auto">
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>
-                                  ¿Eliminar socio de la temporada?
-                                </AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Esta acción no se puede deshacer. Se eliminará
-                                  permanentemente al socio{" "}
-                                  {item.member.firstName} {item.member.lastName}{" "}
-                                  de esta temporada.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter className="flex-col sm:flex-row gap-2">
-                                <AlertDialogCancel className="w-full sm:w-auto">
-                                  Cancelar
-                                </AlertDialogCancel>
-                                <AlertDialogAction
-                                  onClick={() =>
-                                    handleRemoveAssociation(item.id)
-                                  }
-                                  className="bg-destructive hover:bg-destructive/90 text-destructive-foreground w-full sm:w-auto"
-                                >
-                                  Eliminar
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        ) : (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            disabled
-                            className="text-muted-foreground border-muted-foreground/30 bg-muted/20 cursor-not-allowed opacity-50"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                            <span className="sr-only">
-                              Eliminar (deshabilitado)
-                            </span>
-                          </Button>
-                        )}
+                            )}
+                          </div>
+                        </div>
                       </div>
+                    ))
+                  )}
+                </div>
+
+                {/* Pagination Controls for Season Members */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between mt-6 pt-4 border-t border-border gap-3">
+                  <p className="text-sm text-muted-foreground text-center sm:text-left">
+                    Mostrando {startIndex + 1} a{" "}
+                    {Math.min(
+                      startIndex + membersPerPage,
+                      filteredSeasonMembers.length
+                    )}{" "}
+                    de {filteredSeasonMembers.length} socios asociados
+                  </p>
+                  <div className="flex items-center justify-center sm:justify-end gap-2">
+                    {totalPages > 1 && (
+                      <>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setCurrentPage(currentPage - 1)}
+                          disabled={currentPage === 1}
+                          className="flex-shrink-0"
+                        >
+                          <ChevronLeft className="h-4 w-4" />
+                          <span className="hidden xs:inline ml-1">Anterior</span>
+                        </Button>
+                        <span className="text-sm text-muted-foreground px-2 py-1 bg-muted rounded min-w-[60px] text-center">
+                          {currentPage} / {totalPages}
+                        </span>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setCurrentPage(currentPage + 1)}
+                          disabled={currentPage === totalPages}
+                          className="flex-shrink-0"
+                        >
+                          <span className="hidden xs:inline mr-1">Siguiente</span>
+                          <ChevronRight className="h-4 w-4" />
+                        </Button>
+                      </>
+                    )}
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-muted-foreground whitespace-nowrap">
+                        Mostrar:
+                      </span>
+                      <Select
+                        value={membersPerPage.toString()}
+                        onValueChange={handleMembersPerPageChange}
+                      >
+                        <SelectTrigger className="w-20 h-8 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {PAGINATION.PAGE_SIZE_OPTIONS.map((option) => (
+                            <SelectItem key={option} value={option.toString()}>
+                              {option}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
-                ))
-              )}
-            </div>
-
-            {/* Pagination Controls for Season Members */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between mt-6 pt-4 border-t border-border gap-3">
-              <p className="text-sm text-muted-foreground text-center sm:text-left">
-                Mostrando {startIndex + 1} a{" "}
-                {Math.min(
-                  startIndex + membersPerPage,
-                  filteredSeasonMembers.length
-                )}{" "}
-                de {filteredSeasonMembers.length} socios asociados
-              </p>
-              <div className="flex items-center justify-center sm:justify-end gap-2">
-                {totalPages > 1 && (
-                  <>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setCurrentPage(currentPage - 1)}
-                      disabled={currentPage === 1}
-                      className="flex-shrink-0"
-                    >
-                      <ChevronLeft className="h-4 w-4" />
-                      <span className="hidden xs:inline ml-1">Anterior</span>
-                    </Button>
-                    <span className="text-sm text-muted-foreground px-2 py-1 bg-muted rounded min-w-[60px] text-center">
-                      {currentPage} / {totalPages}
-                    </span>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setCurrentPage(currentPage + 1)}
-                      disabled={currentPage === totalPages}
-                      className="flex-shrink-0"
-                    >
-                      <span className="hidden xs:inline mr-1">Siguiente</span>
-                      <ChevronRight className="h-4 w-4" />
-                    </Button>
-                  </>
-                )}
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-muted-foreground whitespace-nowrap">
-                    Mostrar:
-                  </span>
-                  <Select
-                    value={membersPerPage.toString()}
-                    onValueChange={handleMembersPerPageChange}
-                  >
-                    <SelectTrigger className="w-20 h-8 text-xs">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {PAGINATION.PAGE_SIZE_OPTIONS.map((option) => (
-                        <SelectItem key={option} value={option.toString()}>
-                          {option}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
                 </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+              </CardContent>
+            </Card>
+          )}
+        </>
       )}
     </div>
   );
