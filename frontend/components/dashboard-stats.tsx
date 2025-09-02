@@ -1,43 +1,43 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Users, Calendar, UserCheck, TrendingUp } from "lucide-react"
-import { getMockMembers, getMockSeasons } from "../lib/mock-data"
-import { MEMBER_STATUS, SEASON_STATUS } from "../lib/constants"
+import { getMockSocios, getMockTemporadas } from "../lib/mock-data"
+import { ESTADO_SOCIO, ESTADO_TEMPORADA } from "../lib/constants"
 
 export function DashboardStats() {
   // Calculate stats from mock data
-  const members = getMockMembers()
-  const seasons = getMockSeasons()
+  const socios = getMockSocios()
+  const temporadas = getMockTemporadas()
   
-  const totalMembers = members.length
-  const activeMembers = members.filter(member => member.status === MEMBER_STATUS.ACTIVE).length
-  const activeSeasons = seasons.filter(season => season.status === SEASON_STATUS.ACTIVE).length
-  const newMembersThisMonth = Math.floor(totalMembers * 0.05) // Mock calculation
+  const totalSocios = socios.length
+  const sociosActivos = socios.filter(socio => socio.estado === ESTADO_SOCIO.ACTIVO).length
+  const temporadasActivas = temporadas.filter(temporada => temporada.estado === ESTADO_TEMPORADA.ACTIVA).length
+  const nuevosSociosEsteMes = Math.floor(totalSocios * 0.05) // Mock calculation
   
   const stats = [
     {
       title: "Total de Socios",
-      value: totalMembers.toString(),
-      description: `+${newMembersThisMonth} este mes`,
+      value: totalSocios.toString(),
+      description: `+${nuevosSociosEsteMes} este mes`,
       icon: Users,
       trend: "up",
     },
     {
       title: "Temporadas Activas",
-      value: activeSeasons.toString(),
+      value: temporadasActivas.toString(),
       description: "Temporada 2024-2025",
       icon: Calendar,
       trend: "neutral",
     },
     {
       title: "Socios Activos",
-      value: activeMembers.toString(),
-      description: `${Math.round((activeMembers / totalMembers) * 100)}% del total`,
+      value: sociosActivos.toString(),
+      description: `${Math.round((sociosActivos / totalSocios) * 100)}% del total`,
       icon: UserCheck,
       trend: "up",
     },
     {
       title: "Nuevos Registros",
-      value: newMembersThisMonth.toString(),
+      value: nuevosSociosEsteMes.toString(),
       description: "Últimos 30 días",
       icon: TrendingUp,
       trend: "up",

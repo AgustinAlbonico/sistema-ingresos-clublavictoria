@@ -37,85 +37,85 @@ import {
 } from "@/components/ui/select";
 
 // Importar tipos y datos centralizados
-import { Member } from "@/lib/types";
-import { mockMembers } from "@/lib/mock-data";
-import { PAGINATION, SUCCESS_MESSAGES, MEMBER_STATUS } from "@/lib/constants";
+import { Socio } from "@/lib/types";
+import { mockSocios } from "@/lib/mock-data";
+import { PAGINACION, MENSAJES_EXITO, ESTADO_SOCIO } from "@/lib/constants";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 export function MemberManagement() {
-  const [members, setMembers] = useState<Member[]>([]);
+  const [socios, setSocios] = useState<Socio[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [membersPerPage, setMembersPerPage] = useState<number>(
-    PAGINATION.DEFAULT_PAGE_SIZE
+  const [sociosPorPagina, setSociosPorPagina] = useState<number>(
+    PAGINACION.TAMAÑO_PAGINA_POR_DEFECTO
   );
   const [isLoading, setIsLoading] = useState(true);
 
   // Simular carga inicial de datos
   useEffect(() => {
-    const loadMembers = async () => {
+    const loadSocios = async () => {
       try {
         // Simular delay de API
         await new Promise((resolve) => setTimeout(resolve, 1500));
-        setMembers(mockMembers);
+        setSocios(mockSocios);
       } catch (error) {
-        console.error("Error loading members:", error);
+        console.error("Error loading socios:", error);
         toast.error("Error al cargar socios");
       } finally {
         setIsLoading(false);
       }
     };
 
-    loadMembers();
+    loadSocios();
   }, []);
 
   // Hook de búsqueda con debounce
   const { searchTerm, handleSearchChange, clearSearch } = useSearch({
     onSearch: async (query) => {
-      console.log("Searching members for:", query);
+      console.log("Searching socios for:", query);
       setCurrentPage(1);
     },
   });
 
-  // Filter members based on search term
-  const filteredMembers = members
+  // Filter socios based on search term
+  const sociosFiltrados = socios
     .filter(
-      (member) =>
-        `${member.firstName} ${member.lastName}`
+      (socio) =>
+        `${socio.nombre} ${socio.apellido}`
           .toLowerCase()
           .includes(searchTerm.toLowerCase()) ||
-        member.dni.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        member.email.toLowerCase().includes(searchTerm.toLowerCase())
+        socio.dni.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        socio.email.toLowerCase().includes(searchTerm.toLowerCase())
     )
     .sort((a, b) =>
-      `${a.lastName}, ${a.firstName}`.localeCompare(
-        `${b.lastName}, ${b.firstName}`
+      `${a.apellido}, ${a.nombre}`.localeCompare(
+        `${b.apellido}, ${b.nombre}`
       )
     );
 
-  const totalPages = Math.ceil(filteredMembers.length / membersPerPage);
-  const startIndex = (currentPage - 1) * membersPerPage;
-  const paginatedMembers = filteredMembers.slice(
+  const totalPages = Math.ceil(sociosFiltrados.length / sociosPorPagina);
+  const startIndex = (currentPage - 1) * sociosPorPagina;
+  const sociosPaginados = sociosFiltrados.slice(
     startIndex,
-    startIndex + membersPerPage
+    startIndex + sociosPorPagina
   );
 
 
   // TODO: Cuando se implemente la API, esta función debería hacer una llamada DELETE
-  const handleDeleteMember = async (memberId: string) => {
+  const handleDeleteSocio = async (idSocio: string) => {
     try {
-      setMembers(members.filter((member) => member.id !== memberId));
-      toast.success(SUCCESS_MESSAGES.MEMBER_DELETED, {
+      setSocios(socios.filter((socio) => socio.id !== idSocio));
+      toast.success(MENSAJES_EXITO.SOCIO_ELIMINADO, {
         position: "top-center",
         duration: 3000,
       });
     } catch (error) {
-      console.error("Error deleting member:", error);
+      console.error("Error deleting socio:", error);
       toast.error("Error al eliminar socio");
     }
   };
 
-  const handleMembersPerPageChange = (value: string) => {
-    setMembersPerPage(parseInt(value));
+  const handleSociosPorPaginaChange = (value: string) => {
+    setSociosPorPagina(parseInt(value));
     setCurrentPage(1);
   };
 
@@ -164,7 +164,7 @@ export function MemberManagement() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="text-lg text-foreground">
-              Lista de Socios ({filteredMembers.length})
+              Lista de Socios ({sociosFiltrados.length})
             </CardTitle>
             {totalPages > 1 && (
               <p className="text-sm text-muted-foreground">
@@ -182,7 +182,7 @@ export function MemberManagement() {
                   Cargando socios...
                 </p>
               </div>
-            ) : paginatedMembers.length === 0 ? (
+            ) : sociosPaginados.length === 0 ? (
               <div className="text-center py-8">
                 <User className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                 <p className="text-muted-foreground">
@@ -192,19 +192,19 @@ export function MemberManagement() {
                 </p>
               </div>
             ) : (
-              paginatedMembers.map((member) => (
+              sociosPaginados.map((socio) => (
                 <div
-                  key={member.id}
+                  key={socio.id}
                   className="flex flex-col sm:flex-row gap-3 sm:gap-4 sm:items-center sm:justify-between p-4 border border-border rounded-lg hover:bg-muted/50 transition-colors"
                 >
-                  {/* Member Info Section */}
+                  {/* Socio Info Section */}
                   <div className="flex justify-center sm:items-start gap-3 flex-1 min-w-0 ">
                     {/* Avatar - visible on mobile too but smaller */}
                     <div className="w-10 h-10 sm:w-12 sm:h-12 bg-muted rounded-full flex items-center justify-center flex-shrink-0 sm:my-auto ">
-                      {member.photo ? (
+                      {socio.foto ? (
                         <img
-                          src={member.photo || "/placeholder.svg"}
-                          alt={`${member.firstName} ${member.lastName}`}
+                          src={socio.foto || "/placeholder.svg"}
+                          alt={`${socio.nombre} ${socio.apellido}`}
                           className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover"
                         />
                       ) : (
@@ -212,21 +212,21 @@ export function MemberManagement() {
                       )}
                     </div>
 
-                    {/* Member Details */}
+                    {/* Socio Details */}
                     <div className="flex-1 min-w-0">
                       <h3 className="font-semibold text-foreground text-base sm:text-lg truncate">
-                        {member.lastName}, {member.firstName}
+                        {socio.apellido}, {socio.nombre}
                       </h3>
                       <div className="space-y-1">
                         <p className="text-sm text-muted-foreground">
-                          DNI: {member.dni}
+                          DNI: {socio.dni}
                         </p>
                         <p className="text-sm text-muted-foreground truncate">
-                          {member.email}
+                          {socio.email}
                         </p>
-                        {member.phone && (
+                        {socio.telefono && (
                           <p className="text-sm text-muted-foreground">
-                            {member.phone}
+                            {socio.telefono}
                           </p>
                         )}
                       </div>
@@ -237,23 +237,23 @@ export function MemberManagement() {
                   <div className="flex items-center justify-between sm:justify-end gap-3 pt-2 sm:pt-0 border-t sm:border-t-0 border-border/50">
                     <Badge
                       variant={
-                        member.status === MEMBER_STATUS.ACTIVE
+                        socio.estado === ESTADO_SOCIO.ACTIVO
                           ? "default"
                           : "secondary"
                       }
                       className={`${
-                        member.status === MEMBER_STATUS.ACTIVE
+                        socio.estado === ESTADO_SOCIO.ACTIVO
                           ? "bg-primary text-primary-foreground"
                           : ""
                       } flex-shrink-0`}
                     >
-                      {member.status === MEMBER_STATUS.ACTIVE
+                      {socio.estado === ESTADO_SOCIO.ACTIVO
                         ? "Activo"
                         : "Inactivo"}
                     </Badge>
 
                     <div className="flex gap-2">
-                      <Link href={`/socios/${member.id}/edit`}>
+                      <Link href={`/socios/${socio.id}/edit`}>
                         <Button
                           variant="outline"
                           size="sm"
@@ -281,8 +281,8 @@ export function MemberManagement() {
                             </AlertDialogTitle>
                             <AlertDialogDescription>
                               Esta acción no se puede deshacer. Se eliminará
-                              permanentemente el socio {member.firstName}{" "}
-                              {member.lastName} del sistema.
+                              permanentemente el socio {socio.nombre}{" "}
+                              {socio.apellido} del sistema.
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter className="flex-col sm:flex-row gap-2">
@@ -290,7 +290,7 @@ export function MemberManagement() {
                               Cancelar
                             </AlertDialogCancel>
                             <AlertDialogAction
-                              onClick={() => handleDeleteMember(member.id)}
+                              onClick={() => handleDeleteSocio(socio.id)}
                               className="bg-destructive hover:bg-destructive/90 text-destructive-foreground w-full sm:w-auto"
                             >
                               Eliminar
@@ -309,8 +309,8 @@ export function MemberManagement() {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between mt-6 pt-4 border-t border-border gap-3">
             <p className="text-sm text-muted-foreground text-center sm:text-left">
               Mostrando {startIndex + 1} a{" "}
-              {Math.min(startIndex + membersPerPage, filteredMembers.length)} de{" "}
-              {filteredMembers.length} socios
+              {Math.min(startIndex + sociosPorPagina, sociosFiltrados.length)} de{" "}
+              {sociosFiltrados.length} socios
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center sm:justify-end gap-2">
               {totalPages > 1 && (
@@ -345,14 +345,14 @@ export function MemberManagement() {
                   Mostrar:
                 </span>
                 <Select
-                  value={membersPerPage.toString()}
-                  onValueChange={handleMembersPerPageChange}
+                  value={sociosPorPagina.toString()}
+                  onValueChange={handleSociosPorPaginaChange}
                 >
                   <SelectTrigger className="w-20 h-8 text-xs">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {PAGINATION.PAGE_SIZE_OPTIONS.map((option) => (
+                    {PAGINACION.OPCIONES_TAMAÑO_PAGINA.map((option) => (
                       <SelectItem key={option} value={option.toString()}>
                         {option}
                       </SelectItem>

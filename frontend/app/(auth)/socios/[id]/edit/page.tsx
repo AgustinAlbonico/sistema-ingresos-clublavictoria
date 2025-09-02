@@ -1,17 +1,34 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { ArrowLeft, Upload, X } from "lucide-react";
 import Link from "next/link";
 import { PhotoCropper } from "@/components/photo-cropper";
 import { toast } from "sonner";
-import { MemberForm, ISocio } from "@/components/member-form";
+import { MemberForm } from "@/components/member-form";
+import { Socio } from "@/lib/types";
 
-export default function CreateMemberPage() {
+// Mock: en un caso real irías a la API/DB
+const mockSocio: Socio = {
+  id: "1",
+  dni: "12345678",
+  nombre: "Carlos",
+  apellido: "Pérez",
+  direccion: "Av. Siempre Viva 742",
+  email: "carlos@email.com",
+  telefono: "1122334455",
+  fechaNacimiento: "1990-05-15",
+  genero: 'M',
+  estado: 'activo',
+  foto: "https://rickandmortyapi.com/api/character/avatar/146.jpeg",
+};
+
+export default function EditMemberPage() {
   const router = useRouter();
+  const { id } = useParams();
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const [photo, setPhoto] = useState<File | null>(null);
@@ -20,23 +37,31 @@ export default function CreateMemberPage() {
   const [isDragOver, setIsDragOver] = useState(false);
   const [cropSrc, setCropSrc] = useState<string | null>(null);
 
-  const handleCreateSocio = async (formData: Omit<ISocio, 'id'>) => {
+  // Cargar datos del socio al montar el componente
+  useEffect(() => {
+    // Simulamos la carga de datos del socio
+    if (mockSocio.foto) {
+      setPhotoPreview(mockSocio.foto);
+    }
+  }, [id]);
+
+  const handleUpdateSocio = async (formData: Omit<Socio, 'id'>) => {
     try {
       setIsSubmitting(true);
-      console.log("Creando socio:", { ...formData, photo: photoPreview });
+      console.log("Actualizando socio:", { ...formData, foto: photoPreview });
       
-      // Aquí iría la llamada a la API
+      // Aquí iría la llamada a la API para actualizar
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // Mostrar toast de éxito con Sonner
-      toast.success("El socio se ha creado correctamente.");
+      // Mostrar toast de éxito
+      toast.success("El socio se ha actualizado correctamente.");
       
-      // Redirigir después de crear el socio
+      // Redirigir después de actualizar el socio
       router.push("/socios");
     } catch (error) {
-      console.error("Error al crear socio:", error);
-      // Mostrar toast de error con Sonner
-      toast.error("No se pudo crear el socio. Por favor, intente nuevamente.");
+      console.error("Error al actualizar socio:", error);
+      // Mostrar toast de error
+      toast.error("No se pudo actualizar el socio. Por favor, intente nuevamente.");
     } finally {
       setIsSubmitting(false);
     }
@@ -91,7 +116,7 @@ export default function CreateMemberPage() {
               </Button>
             </Link>
             <h1 className="text-2xl font-bold text-foreground text-center">
-              Crear Nuevo Socio
+              Editar Socio
             </h1>
           </div>
 
@@ -158,7 +183,8 @@ export default function CreateMemberPage() {
 
             {/* Member Form */}
             <MemberForm
-              onSubmit={handleCreateSocio}
+              socio={mockSocio}
+              onSubmit={handleUpdateSocio}
               onCancel={() => router.push("/socios")}
               isSubmitting={isSubmitting}
             />

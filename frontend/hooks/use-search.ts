@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { SEARCH } from '@/lib/constants'
+import { BUSQUEDA } from '@/lib/constants'
 
 interface UseSearchOptions {
   initialValue?: string
@@ -10,8 +10,8 @@ interface UseSearchOptions {
 
 export function useSearch({
   initialValue = '',
-  debounceDelay = SEARCH.DEBOUNCE_DELAY,
-  minLength = SEARCH.MIN_SEARCH_LENGTH,
+  debounceDelay = BUSQUEDA.DELAY_DEBOUNCE,
+  minLength = BUSQUEDA.LONGITUD_MINIMA_BUSQUEDA,
   onSearch
 }: UseSearchOptions = {}) {
   const [searchTerm, setSearchTerm] = useState(initialValue)
@@ -53,7 +53,6 @@ export function useSearch({
     handleSearchChange,
     clearSearch,
     isValidSearch,
-    isSearching: searchTerm !== debouncedSearchTerm, // Nuevo: indica si está buscando
-    isDebouncing: searchTerm !== debouncedSearchTerm // Nuevo: alias más claro
+    isSearching: searchTerm !== debouncedSearchTerm // Indica si está buscando
   }
 }

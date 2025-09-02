@@ -10,9 +10,9 @@ import { useSearch } from '@/hooks/use-search'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { ErrorMessage } from '@/components/ui/error-message'
 
-import { EntryLog, DailyStats } from '@/lib/types'
-import { mockMembers, mockEntryLogs, mockDailyStats } from '@/lib/mock-data'
-import { PAGINATION } from '@/lib/constants'
+import { RegistroEntrada, EstadisticasDiarias } from '@/lib/types'
+import { mockSocios, mockRegistrosEntrada, mockEstadisticasDiarias } from '@/lib/mock-data'
+import { PAGINACION } from '@/lib/constants'
 
 export function StatisticsView() {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0])
@@ -21,12 +21,12 @@ export function StatisticsView() {
 
   // Obtener estadísticas del día seleccionado
   const selectedDayStats = useMemo(() => {
-    return mockDailyStats.find(stat => stat.date === selectedDate) || {
-      date: selectedDate,
-      totalEntries: 0,
-      currentlyInside: 0,
-      peakOccupancy: 0,
-      averageStayTime: 0
+    return mockEstadisticasDiarias.find(stat => stat.fecha === selectedDate) || {
+      fecha: selectedDate,
+      totalEntradas: 0,
+      actualmenteDentro: 0,
+      picoOcupacion: 0,
+      tiempoPromedioEstadia: 0
     }
   }, [selectedDate])
 
@@ -40,13 +40,13 @@ export function StatisticsView() {
 
   // Filtrar logs basado en el término de búsqueda
   const filteredLogs = useMemo(() => {
-    let logs = mockEntryLogs.filter(log => log.date === selectedDate)
+    let logs = mockRegistrosEntrada.filter(log => log.fecha === selectedDate)
     
     if (searchTerm.trim()) {
       const searchLower = searchTerm.toLowerCase()
       logs = logs.filter(log =>
-        log.memberName.toLowerCase().includes(searchLower) ||
-        log.memberDni.toLowerCase().includes(searchLower)
+        log.nombreSocio.toLowerCase().includes(searchLower) ||
+        log.dniSocio.toLowerCase().includes(searchLower)
       )
     }
     
@@ -56,7 +56,7 @@ export function StatisticsView() {
   // Paginación
   const pagination = usePagination({
     totalItems: filteredLogs.length,
-    initialPageSize: PAGINATION.DEFAULT_PAGE_SIZE
+    initialPageSize: PAGINACION.TAMAÑO_PAGINA_POR_DEFECTO
   })
 
   // Calcular estadísticas específicas del día
@@ -66,7 +66,7 @@ export function StatisticsView() {
     const clubEntries = Math.floor(poolEntries * 0.3)
     const totalEntries = poolEntries + clubEntries
     const members = todayLogs.filter(log => 
-      mockMembers.find(m => m.id === log.memberId)?.status === 'active'
+      mockSocios.find(m => m.id === log.idSocio)?.estado === 'activo'
     ).length
     const nonMembers = totalEntries - members
 
@@ -264,17 +264,17 @@ export function StatisticsView() {
                         </div>
                         <div className="flex-1 min-w-0">
                           <h3 className="font-semibold text-foreground truncate">
-                            {log.memberName}
+                            {log.nombreSocio}
                           </h3>
                           <p className="text-sm text-muted-foreground">
-                            DNI: {log.memberDni}
+                            DNI: {log.dniSocio}
                           </p>
                         </div>
                       </div>
                       <div className="flex items-center gap-4 mt-3 sm:mt-0">
                         <div className="text-sm">
                           <span className="text-muted-foreground">Entrada:</span>{' '}
-                          <span className="font-medium">{log.entryTime}</span>
+                          <span className="font-medium">{log.horaEntrada}</span>
                         </div>
                       </div>
                     </div>

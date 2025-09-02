@@ -7,135 +7,135 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { UserCheck, X } from "lucide-react"
-import { Member, Season, Association } from "@/lib/types"
-import { MEMBER_STATUS, SEASON_STATUS, ASSOCIATION_STATUS, ERROR_MESSAGES } from "@/lib/constants"
+import { Socio, Temporada, Asociacion } from "@/lib/types"
+import { ESTADO_SOCIO, ESTADO_TEMPORADA, ESTADO_ASOCIACION, MENSAJES_ERROR } from "@/lib/constants"
 
 interface AssociationFormProps {
-  members: Member[]
-  seasons: Season[]
-  existingAssociations: Association[]
-  onSubmit: (association: { memberId: string; seasonId: string }) => void
+  socios: Socio[]
+  temporadas: Temporada[]
+  asociacionesExistentes: Asociacion[]
+  onSubmit: (asociacion: { idSocio: string; idTemporada: string }) => void
   onCancel: () => void
 }
 
-export function AssociationForm({ members, seasons, existingAssociations, onSubmit, onCancel }: AssociationFormProps) {
-  const [selectedMember, setSelectedMember] = useState("")
-  const [selectedSeason, setSelectedSeason] = useState("")
-  const [errors, setErrors] = useState<Record<string, string>>({})
+export function AssociationForm({ socios, temporadas, asociacionesExistentes, onSubmit, onCancel }: AssociationFormProps) {
+  const [socioSeleccionado, setSocioSeleccionado] = useState("")
+  const [temporadaSeleccionada, setTemporadaSeleccionada] = useState("")
+  const [errores, setErrores] = useState<Record<string, string>>({})
 
-  // Filter active members and available seasons
-  const activeMembers = members.filter((member) => member.status === MEMBER_STATUS.ACTIVE)
-  const availableSeasons = seasons.filter((season) => 
-    season.status === SEASON_STATUS.ACTIVE || season.status === SEASON_STATUS.UPCOMING
+  // Filter active socios and available temporadas
+  const sociosActivos = socios.filter((socio) => socio.estado === ESTADO_SOCIO.ACTIVO)
+  const temporadasDisponibles = temporadas.filter((temporada) => 
+    temporada.estado === ESTADO_TEMPORADA.ACTIVA || temporada.estado === ESTADO_TEMPORADA.PROXIMA
   )
 
-  const validateForm = () => {
-    const newErrors: Record<string, string> = {}
+  const validarFormulario = () => {
+    const nuevosErrores: Record<string, string> = {}
 
-    if (!selectedMember) {
-      newErrors.member = ERROR_MESSAGES.REQUIRED_FIELD
+    if (!socioSeleccionado) {
+      nuevosErrores.socio = MENSAJES_ERROR.CAMPO_REQUERIDO
     }
 
-    if (!selectedSeason) {
-      newErrors.season = ERROR_MESSAGES.REQUIRED_FIELD
+    if (!temporadaSeleccionada) {
+      nuevosErrores.temporada = MENSAJES_ERROR.CAMPO_REQUERIDO
     }
 
-    if (selectedMember && selectedSeason) {
+    if (socioSeleccionado && temporadaSeleccionada) {
       // Check if association already exists
-      const existingAssociation = existingAssociations.find(
-        (assoc) => assoc.memberId === selectedMember && assoc.seasonId === selectedSeason && assoc.status === ASSOCIATION_STATUS.ACTIVE,
+      const asociacionExistente = asociacionesExistentes.find(
+        (asoc) => asoc.idSocio === socioSeleccionado && asoc.idTemporada === temporadaSeleccionada && asoc.estado === ESTADO_ASOCIACION.ACTIVA,
       )
 
-      if (existingAssociation) {
-        newErrors.general = "Esta asociación ya existe"
+      if (asociacionExistente) {
+        nuevosErrores.general = "Esta asociación ya existe"
       }
     }
 
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
+    setErrores(nuevosErrores)
+    return Object.keys(nuevosErrores).length === 0
   }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (validateForm()) {
+    if (validarFormulario()) {
       onSubmit({
-        memberId: selectedMember,
-        seasonId: selectedSeason,
+        idSocio: socioSeleccionado,
+        idTemporada: temporadaSeleccionada,
       })
     }
   }
 
-  const handleMemberChange = (value: string) => {
-    setSelectedMember(value)
-    if (errors.member || errors.general) {
-      setErrors((prev) => ({ ...prev, member: "", general: "" }))
+  const handleCambioSocio = (value: string) => {
+    setSocioSeleccionado(value)
+    if (errores.socio || errores.general) {
+      setErrores((prev) => ({ ...prev, socio: "", general: "" }))
     }
   }
 
-  const handleSeasonChange = (value: string) => {
-    setSelectedSeason(value)
-    if (errors.season || errors.general) {
-      setErrors((prev) => ({ ...prev, season: "", general: "" }))
+  const handleCambioTemporada = (value: string) => {
+    setTemporadaSeleccionada(value)
+    if (errores.temporada || errores.general) {
+      setErrores((prev) => ({ ...prev, temporada: "", general: "" }))
     }
   }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      {errors.general && (
+      {errores.general && (
         <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
-          <p className="text-sm text-destructive">{errors.general}</p>
+          <p className="text-sm text-destructive">{errores.general}</p>
         </div>
       )}
 
       <div className="space-y-2">
-        <Label htmlFor="member" className="text-foreground">
+        <Label htmlFor="socio" className="text-foreground">
           Seleccionar Socio *
         </Label>
-        <Select value={selectedMember} onValueChange={handleMemberChange}>
+        <Select value={socioSeleccionado} onValueChange={handleCambioSocio}>
           <SelectTrigger
-            className={`rounded-lg ${errors.member ? "border-destructive" : "border-border"} focus:ring-primary focus:border-primary`}
+            className={`rounded-lg ${errores.socio ? "border-destructive" : "border-border"} focus:ring-primary focus:border-primary`}
           >
             <SelectValue placeholder="Seleccione un socio..." />
           </SelectTrigger>
           <SelectContent>
-            {activeMembers.length === 0 ? (
+            {sociosActivos.length === 0 ? (
               <div className="p-2 text-sm text-muted-foreground">No hay socios activos disponibles</div>
             ) : (
-              activeMembers.map((member) => (
-                <SelectItem key={member.id} value={member.id}>
+              sociosActivos.map((socio) => (
+                <SelectItem key={socio.id} value={socio.id}>
                   <div className="flex flex-col">
-                    <span className="font-medium">{member.firstName} {member.lastName}</span>
-                    <span className="text-xs text-muted-foreground">DNI: {member.dni}</span>
+                    <span className="font-medium">{socio.nombre} {socio.apellido}</span>
+                    <span className="text-xs text-muted-foreground">DNI: {socio.dni}</span>
                   </div>
                 </SelectItem>
               ))
             )}
           </SelectContent>
         </Select>
-        {errors.member && <p className="text-sm text-destructive">{errors.member}</p>}
+        {errores.socio && <p className="text-sm text-destructive">{errores.socio}</p>}
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="season" className="text-foreground">
+        <Label htmlFor="temporada" className="text-foreground">
           Seleccionar Temporada *
         </Label>
-        <Select value={selectedSeason} onValueChange={handleSeasonChange}>
+        <Select value={temporadaSeleccionada} onValueChange={handleCambioTemporada}>
           <SelectTrigger
-            className={`rounded-lg ${errors.season ? "border-destructive" : "border-border"} focus:ring-primary focus:border-primary`}
+            className={`rounded-lg ${errores.temporada ? "border-destructive" : "border-border"} focus:ring-primary focus:border-primary`}
           >
             <SelectValue placeholder="Seleccione una temporada..." />
           </SelectTrigger>
           <SelectContent>
-            {availableSeasons.length === 0 ? (
+            {temporadasDisponibles.length === 0 ? (
               <div className="p-2 text-sm text-muted-foreground">No hay temporadas disponibles</div>
             ) : (
-              availableSeasons.map((season) => (
-                <SelectItem key={season.id} value={season.id}>
+              temporadasDisponibles.map((temporada) => (
+                <SelectItem key={temporada.id} value={temporada.id}>
                   <div className="flex flex-col">
-                    <span className="font-medium">{season.name}</span>
+                    <span className="font-medium">{temporada.nombre}</span>
                     <span className="text-xs text-muted-foreground">
-                      {new Date(season.startDate).toLocaleDateString("es-ES")} -{" "}
-                      {new Date(season.endDate).toLocaleDateString("es-ES")}
+                      {new Date(temporada.fechaInicio).toLocaleDateString("es-ES")} -{" "}
+                      {new Date(temporada.fechaFin).toLocaleDateString("es-ES")}
                     </span>
                   </div>
                 </SelectItem>
@@ -143,14 +143,14 @@ export function AssociationForm({ members, seasons, existingAssociations, onSubm
             )}
           </SelectContent>
         </Select>
-        {errors.season && <p className="text-sm text-destructive">{errors.season}</p>}
+        {errores.temporada && <p className="text-sm text-destructive">{errores.temporada}</p>}
       </div>
 
       <div className="flex gap-3 pt-4">
         <Button
           type="submit"
           className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg"
-          disabled={activeMembers.length === 0 || availableSeasons.length === 0}
+          disabled={sociosActivos.length === 0 || temporadasDisponibles.length === 0}
         >
           <UserCheck className="h-4 w-4 mr-2" />
           Asociar

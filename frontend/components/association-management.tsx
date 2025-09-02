@@ -60,23 +60,23 @@ import {
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 // Importar tipos y datos centralizados
-import { Season, Association } from "@/lib/types";
-import { mockSeasons, mockAssociations, mockMembers } from "@/lib/mock-data";
-import { PAGINATION, SUCCESS_MESSAGES } from "@/lib/constants";
+import { Temporada, Asociacion } from "@/lib/types";
+import { mockTemporadas, mockAsociaciones, mockSocios } from "@/lib/mock-data";
+import { PAGINACION, MENSAJES_EXITO } from "@/lib/constants";
 import { useSearch } from '@/hooks/use-search'
 
 export function AssociationManagement() {
-  const [seasons] = useState<Season[]>(mockSeasons);
-  const [associations, setAssociations] =
-    useState<Association[]>(mockAssociations);
-  const [selectedSeason, setSelectedSeason] = useState<string>("");
+  const [temporadas] = useState<Temporada[]>(mockTemporadas);
+  const [asociaciones, setAsociaciones] =
+    useState<Asociacion[]>(mockAsociaciones);
+  const [temporadaSeleccionada, setTemporadaSeleccionada] = useState<string>("");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   // Estados para paginación de socios asociados
   const [currentPage, setCurrentPage] = useState(1);
-  const [membersPerPage, setMembersPerPage] = useState<number>(
-    PAGINATION.DEFAULT_PAGE_SIZE
+  const [sociosPorPagina, setSociosPorPagina] = useState<number>(
+    PAGINACION.TAMAÑO_PAGINA_POR_DEFECTO
   );
 
   // Estados para búsqueda y paginación de socios asociados
@@ -88,93 +88,93 @@ export function AssociationManagement() {
 
   // Server-side search hook
   const {
-    members: availableMembers,
-    loading: isLoadingMembers,
+    members: sociosDisponibles,
+    loading: isLoadingSocios,
     pagination,
-    error: membersError,
-    searchTerm: availableSearchTerm,
-    currentPage: availableCurrentPage,
-    setSearchTerm: setAvailableSearchTerm,
-    setCurrentPage: setAvailableCurrentPage,
+    error: sociosError,
+    searchTerm: terminoBusquedaDisponibles,
+    currentPage: paginaActualDisponibles,
+    setSearchTerm: setTerminoBusquedaDisponibles,
+    setCurrentPage: setPaginaActualDisponibles,
     refetch,
-  } = useAvailableMembers(selectedSeason || "");
+  } = useAvailableMembers(temporadaSeleccionada || "");
 
   useEffect(() => {
-    const currentDate = new Date();
-    const currentSeasonObj = seasons.find((season) => {
-      const startDate = new Date(season.startDate);
-      const endDate = new Date(season.endDate);
-      return currentDate >= startDate && currentDate <= endDate;
+    const fechaActual = new Date();
+    const temporadaActualObj = temporadas.find((temporada) => {
+      const fechaInicio = new Date(temporada.fechaInicio);
+      const fechaFin = new Date(temporada.fechaFin);
+      return fechaActual >= fechaInicio && fechaActual <= fechaFin;
     });
 
-    if (currentSeasonObj) {
-      setSelectedSeason(currentSeasonObj.id);
-    } else if (seasons.length > 0) {
-      const sortedSeasons = [...seasons].sort(
+    if (temporadaActualObj) {
+      setTemporadaSeleccionada(temporadaActualObj.id);
+    } else if (temporadas.length > 0) {
+      const temporadasOrdenadas = [...temporadas].sort(
         (a, b) =>
-          new Date(b.startDate).getTime() - new Date(a.startDate).getTime()
+          new Date(b.fechaInicio).getTime() - new Date(a.fechaInicio).getTime()
       );
-      setSelectedSeason(sortedSeasons[0].id);
+      setTemporadaSeleccionada(temporadasOrdenadas[0].id);
     }
-  }, [seasons]);
+  }, [temporadas]);
 
   // Simular carga de asociaciones al cambiar de temporada
   useEffect(() => {
     setIsLoading(true);
-    const loadAssociations = async () => {
+    const cargarAsociaciones = async () => {
       await new Promise((resolve) => setTimeout(resolve, 1200)); // Simula delay de API
       setIsLoading(false);
     };
-    loadAssociations();
-  }, [selectedSeason]);
+    cargarAsociaciones();
+  }, [temporadaSeleccionada]);
 
-  const getSeasonMembers = () => {
-    if (!selectedSeason) return [];
+  const obtenerSociosTemporada = () => {
+    if (!temporadaSeleccionada) return [];
 
-    return associations
-      .filter((assoc) => assoc.seasonId === selectedSeason)
-      .map((assoc) => ({
-        ...assoc,
-        member: mockMembers.find((member) => member.id === assoc.memberId)!,
+    return asociaciones
+      .filter((asoc) => asoc.idTemporada === temporadaSeleccionada)
+      .map((asoc) => ({
+        ...asoc,
+        socio: mockSocios.find((socio) => socio.id === asoc.idSocio)!,
       }))
-      .filter((item) => item.member) // Filtrar items sin member válido
+      .filter((item) => item.socio) // Filtrar items sin socio válido
       .sort((a, b) => {
-        const nameA =
-          `${a.member.lastName}, ${a.member.firstName}`.toLowerCase();
-        const nameB =
-          `${b.member.lastName}, ${b.member.firstName}`.toLowerCase();
-        return nameA.localeCompare(nameB);
+        const nombreA =
+          `${a.socio.apellido}, ${a.socio.nombre}`.toLowerCase();
+        const nombreB =
+          `${b.socio.apellido}, ${b.socio.nombre}`.toLowerCase();
+        return nombreA.localeCompare(nombreB);
       });
   };
 
   // Filtrar miembros usando el término de búsqueda con debounce
-  const filteredSeasonMembers = useMemo(() => {
-    let members = getSeasonMembers()
+  const sociosTemporadaFiltrados = useMemo(() => {
+    let socios = obtenerSociosTemporada()
     
     if (searchTerm.trim()) {
-      const searchLower = searchTerm.toLowerCase()
-      members = members.filter((item) => {
-        if (!item.member) return false
+      const busquedaLower = searchTerm.toLowerCase()
+      socios = socios.filter((item) => {
+        if (!item.socio) return false
         return (
-          `${item.member.firstName} ${item.member.lastName}`
+          `${item.socio.nombre} ${item.socio.apellido}`
             .toLowerCase()
-            .includes(searchLower) ||
-          item.member.dni.toLowerCase().includes(searchLower) ||
-          (item.member.email &&
-            item.member.email.toLowerCase().includes(searchLower))
+            .includes(busquedaLower) ||
+          item.socio.dni.toLowerCase().includes(busquedaLower) ||
+          (item.socio.email &&
+            item.socio.email.toLowerCase().includes(busquedaLower))
         )
       })
     }
     
-    return members
-  }, [searchTerm, selectedSeason])
+    return socios
+  }, [searchTerm, temporadaSeleccionada])
 
   // Paginación para socios asociados
-  const totalPages = Math.ceil(filteredSeasonMembers.length / membersPerPage);
-  const startIndex = (currentPage - 1) * membersPerPage;
-  const paginatedSeasonMembers = filteredSeasonMembers.slice(
+  const totalPages = Math.ceil(sociosTemporadaFiltrados.length / sociosPorPagina);
+  const startIndex = (currentPage - 1) * sociosPorPagina;
+  const sociosTemporadaPaginados = sociosTemporadaFiltrados.slice(
     startIndex,
-    startIndex + membersPerPage
+    startIndex + sociosPorPagina
   );
 
   // Eliminar la declaración manual duplicada de handleSearchChange
@@ -183,8 +183,8 @@ export function AssociationManagement() {
   //   setCurrentPage(1);
   // };
 
-  const handleMembersPerPageChange = (value: string) => {
-    setMembersPerPage(parseInt(value));
+  const handleSociosPorPaginaChange = (value: string) => {
+    setSociosPorPagina(parseInt(value));
     setCurrentPage(1);
   };
 
@@ -196,50 +196,51 @@ export function AssociationManagement() {
     });
   };
 
-  const selectedSeasonObj = seasons.find(
-    (season) => season.id === selectedSeason
+  const temporadaSeleccionadaObj = temporadas.find(
+    (temporada) => temporada.id === temporadaSeleccionada
   );
 
   // Check if selected season has ended
-  const isSeasonEnded = selectedSeasonObj
-    ? new Date() > new Date(selectedSeasonObj.endDate)
+  const haFinalizadoTemporada = temporadaSeleccionadaObj
+    ? new Date() > new Date(temporadaSeleccionadaObj.fechaFin)
     : false;
 
   // Check if selected season has started
-  const isSeasonStarted = selectedSeasonObj
-    ? new Date() >= new Date(selectedSeasonObj.startDate)
+  const haComenzadoTemporada = temporadaSeleccionadaObj
+    ? new Date() >= new Date(temporadaSeleccionadaObj.fechaInicio)
     : false;
 
   // Check if season is currently active (can add/remove members)
-  const isSeasonActive = selectedSeasonObj
-    ? new Date() >= new Date(selectedSeasonObj.startDate) &&
-      new Date() <= new Date(selectedSeasonObj.endDate)
+  const estaActivaTemporada = temporadaSeleccionadaObj
+    ? new Date() >= new Date(temporadaSeleccionadaObj.fechaInicio) &&
+      new Date() <= new Date(temporadaSeleccionadaObj.fechaFin)
     : false;
 
   // Check if season is future (can add/remove members)
-  const isSeasonFuture = selectedSeasonObj
-    ? new Date() < new Date(selectedSeasonObj.startDate)
+  const esFuturaTemporada = temporadaSeleccionadaObj
+    ? new Date() < new Date(temporadaSeleccionadaObj.fechaInicio)
     : false;
 
   // Check if can manage members (future or active seasons)
-  const canManageMembers = isSeasonFuture || isSeasonActive;
+  const puedeGestionarSocios = esFuturaTemporada || estaActivaTemporada;
 
-  const handleAddMemberToSeason = async (memberId: string) => {
-    if (!selectedSeason) return;
+  const handleAgregarSocioATemporada = async (idSocio: string) => {
+    if (!temporadaSeleccionada) return;
 
     try {
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 500));
 
-      const newAssociation: Association = {
-        id: `assoc-${Date.now()}`,
-        memberId,
-        seasonId: selectedSeason,
-        associationDate: new Date().toISOString().split("T")[0],
+      const nuevaAsociacion: Asociacion = {
+        id: `asoc-${Date.now()}`,
+        idSocio,
+        idTemporada: temporadaSeleccionada,
+        fechaAsociacion: new Date().toISOString().split("T")[0],
+        estado: 'activa'
       };
 
-      setAssociations((prev) => [...prev, newAssociation]);
-      toast.success(SUCCESS_MESSAGES.ASSOCIATION_CREATED);
+      setAsociaciones((prev) => [...prev, nuevaAsociacion]);
+      toast.success(MENSAJES_EXITO.ASOCIACION_CREADA);
 
       // Refetch available members to update the list
       refetch();
@@ -249,14 +250,14 @@ export function AssociationManagement() {
     }
   };
 
-  const handleRemoveAssociation = (associationId: string) => {
-    if (!canManageMembers) {
+  const handleEliminarAsociacion = (idAsociacion: string) => {
+    if (!puedeGestionarSocios) {
       toast.error("No se pueden eliminar socios de temporadas finalizadas");
       return;
     }
 
-    setAssociations(associations.filter((assoc) => assoc.id !== associationId));
-    toast.success(SUCCESS_MESSAGES.ASSOCIATION_DELETED);
+    setAsociaciones(asociaciones.filter((asoc) => asoc.id !== idAsociacion));
+    toast.success(MENSAJES_EXITO.ASOCIACION_ELIMINADA);
     refetch();
   };
 
@@ -273,20 +274,20 @@ export function AssociationManagement() {
               <label className="text-sm font-medium">
                 Seleccionar Temporada
               </label>
-              <Select value={selectedSeason} onValueChange={setSelectedSeason}>
+              <Select value={temporadaSeleccionada} onValueChange={setTemporadaSeleccionada}>
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Selecciona una temporada" />
                 </SelectTrigger>
                 <SelectContent className="">
-                  {seasons.map((season) => (
-                    <SelectItem key={season.id} value={season.id}>
+                  {temporadas.map((temporada) => (
+                    <SelectItem key={temporada.id} value={temporada.id}>
                       <div className="flex items-center gap-2">
                         <Calendar className="h-4 w-4" />
                         <div>
-                          <p className="font-medium">{season.name}</p>
+                          <p className="font-medium">{temporada.nombre}</p>
                           <p className="text-xs text-muted-foreground">
-                            {formatDate(season.startDate)} -{" "}
-                            {formatDate(season.endDate)}
+                            {formatDate(temporada.fechaInicio)} -{" "}
+                            {formatDate(temporada.fechaFin)}
                           </p>
                         </div>
                       </div>
@@ -297,7 +298,7 @@ export function AssociationManagement() {
             </div>
 
             {/* Warning message when season has ended */}
-            {selectedSeason && selectedSeasonObj && isSeasonEnded && (
+            {temporadaSeleccionada && temporadaSeleccionadaObj && haFinalizadoTemporada && (
               <Alert className="border-yellow-200 bg-yellow-50 text-yellow-800">
                 <AlertTriangle className="h-4 w-4 text-yellow-600" />
                 <AlertDescription>
@@ -309,13 +310,13 @@ export function AssociationManagement() {
             )}
 
             {/* Info for future seasons */}
-            {selectedSeason && selectedSeasonObj && isSeasonFuture && (
+            {temporadaSeleccionada && temporadaSeleccionadaObj && esFuturaTemporada && (
               <div className="mt-4">
                 <Alert className="border-green-200 bg-green-50 text-green-800">
                   <Calendar className="h-4 w-4 text-green-600" />
                   <AlertDescription>
                     Esta temporada comenzará el{" "}
-                    {formatDate(selectedSeasonObj.startDate)}. Puedes agregar y
+                    {formatDate(temporadaSeleccionadaObj.fechaInicio)}. Puedes agregar y
                     eliminar socios antes de que comience.
                   </AlertDescription>
                 </Alert>
@@ -333,31 +334,31 @@ export function AssociationManagement() {
       ) : (
         <>
           {/* Season Members Display */}
-          {selectedSeason && selectedSeasonObj && (
+          {temporadaSeleccionada && temporadaSeleccionadaObj && (
             <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div className="space-y-1">
                     <CardTitle className="text-xl">
-                      {selectedSeasonObj.name}
+                      {temporadaSeleccionadaObj.nombre}
                     </CardTitle>
                     <CardDescription>
-                      {formatDate(selectedSeasonObj.startDate)} -{" "}
-                      {formatDate(selectedSeasonObj.endDate)}
+                      {formatDate(temporadaSeleccionadaObj.fechaInicio)} -{" "}
+                      {formatDate(temporadaSeleccionadaObj.fechaFin)}
                     </CardDescription>
                   </div>
                   <div className="flex items-center gap-3">
                     <Badge
-                      variant={isSeasonEnded ? "secondary" : "default"}
+                      variant={haFinalizadoTemporada ? "secondary" : "default"}
                       className="opacity- hidden sm:block"
                     >
-                      {isSeasonEnded
+                      {haFinalizadoTemporada
                         ? "Finalizada"
-                        : isSeasonFuture
+                        : esFuturaTemporada
                         ? "Futura"
                         : "Temporada Activa"}
                     </Badge>
-                    {canManageMembers && (
+                    {puedeGestionarSocios && (
                       <Dialog
                         open={isAddDialogOpen}
                         onOpenChange={setIsAddDialogOpen}
@@ -371,7 +372,7 @@ export function AssociationManagement() {
                         <DialogContent className="w-[calc(100vw-2rem)] sm:mx-auto  sm:w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
                           <DialogHeader>
                             <DialogTitle>
-                              Agregar Socios a {selectedSeasonObj.name}
+                              Agregar Socios a {temporadaSeleccionadaObj.nombre}
                             </DialogTitle>
                             <DialogDescription>
                               Busca y selecciona los socios que deseas agregar a
@@ -386,9 +387,9 @@ export function AssociationManagement() {
                                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
                                 <Input
                                   placeholder="Buscar socios disponibles..."
-                                  value={availableSearchTerm}
+                                  value={terminoBusquedaDisponibles}
                                   onChange={(e) =>
-                                    setAvailableSearchTerm(e.target.value)
+                                    setTerminoBusquedaDisponibles(e.target.value)
                                   }
                                   className="pl-10"
                                 />
@@ -397,39 +398,39 @@ export function AssociationManagement() {
 
                             {/* Available Members List */}
                             <div className="flex-1 overflow-y-auto">
-                              {isLoadingMembers ? (
+                              {isLoadingSocios ? (
                                 <div className="p-4 text-center">
                                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
                                   <p className="mt-2 text-sm text-muted-foreground">
                                     Cargando socios...
                                   </p>
                                 </div>
-                              ) : membersError ? (
+                              ) : sociosError ? (
                                 <div className="p-4 text-center text-destructive">
-                                  <p>Error al cargar socios: {membersError}</p>
+                                  <p>Error al cargar socios: {sociosError}</p>
                                 </div>
-                              ) : availableMembers.length === 0 ? (
+                              ) : sociosDisponibles.length === 0 ? (
                                 <div className="p-4 text-center">
                                   <Users className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
                                   <p className="text-muted-foreground">
-                                    {availableSearchTerm
+                                    {terminoBusquedaDisponibles
                                       ? "No se encontraron socios disponibles"
                                       : "No hay socios disponibles para agregar"}
                                   </p>
                                 </div>
                               ) : (
                                 <div className="p-4 space-y-3">
-                                  {availableMembers.map((member) => (
+                                  {sociosDisponibles.map((socio) => (
                                     <div
-                                      key={member.id}
+                                      key={socio.id}
                                       className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 border border-border rounded-lg hover:bg-muted/50 transition-colors bg-background"
                                     >
                                       <div className="flex items-center gap-3 flex-1 min-w-0">
                                         <div className="flex-shrink-0 w-12 h-12 bg-muted rounded-full flex items-center justify-center overflow-hidden">
-                                          {member.photo ? (
+                                          {socio.foto ? (
                                             <img
-                                              src={member.photo}
-                                              alt={`${member.firstName} ${member.lastName}`}
+                                              src={socio.foto}
+                                              alt={`${socio.nombre} ${socio.apellido}`}
                                               className="w-full h-full object-cover"
                                             />
                                           ) : (
@@ -438,7 +439,7 @@ export function AssociationManagement() {
                                         </div>
                                         <div className="flex-1 min-w-0">
                                           <p className="font-medium text-foreground truncate">
-                                            {member.firstName} {member.lastName}
+                                            {socio.nombre} {socio.apellido}
                                           </p>
                                           <div className="space-y-2 mt-2">
                                             {/* DNI - Siempre visible y prominente */}
@@ -447,24 +448,24 @@ export function AssociationManagement() {
                                                 DNI
                                               </span>
                                               <span className="text-sm font-mono text-foreground">
-                                                {member.dni}
+                                                {socio.dni}
                                               </span>
                                             </div>
                                             
                                             {/* Email y teléfono uno encima del otro */}
-                                            {member.email && (
+                                            {socio.email && (
                                               <div className="flex items-center gap-2">
                                                 <Mail className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                                                 <span className="text-sm text-muted-foreground truncate">
-                                                  {member.email}
+                                                  {socio.email}
                                                 </span>
                                               </div>
                                             )}
-                                            {member.phone && (
+                                            {socio.telefono && (
                                               <div className="flex items-center gap-2">
                                                 <Phone className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                                                 <span className="text-sm text-muted-foreground truncate">
-                                                  {member.phone}
+                                                  {socio.telefono}
                                                 </span>
                                               </div>
                                             )}
@@ -474,7 +475,7 @@ export function AssociationManagement() {
                                       <div className="flex-shrink-0">
                                         <Button
                                           onClick={() =>
-                                            handleAddMemberToSeason(member.id)
+                                            handleAgregarSocioATemporada(socio.id)
                                           }
                                           size="sm"
                                           className="bg-primary hover:bg-primary/90 text-primary-foreground"
@@ -490,22 +491,22 @@ export function AssociationManagement() {
                             </div>
 
                             {/* Pagination for available members */}
-                            {pagination && pagination.totalPages > 1 && (
+                            {pagination && pagination.totalPaginas > 1 && (
                               <div className="p-4 border-t flex items-center justify-between">
                                 <p className="text-sm text-muted-foreground">
-                                  Página {pagination.currentPage} de{" "}
-                                  {pagination.totalPages}
+                                  Página {pagination.paginaActual} de{" "}
+                                  {pagination.totalPaginas}
                                 </p>
                                 <div className="flex items-center gap-2">
                                   <Button
                                     variant="outline"
                                     size="sm"
                                     onClick={() =>
-                                      setAvailableCurrentPage(
-                                        pagination.currentPage - 1
+                                      setPaginaActualDisponibles(
+                                        pagination.paginaActual - 1
                                       )
                                     }
-                                    disabled={!pagination.hasPreviousPage}
+                                    disabled={!pagination.tieneAnteriorPagina}
                                   >
                                     <ChevronLeft className="h-4 w-4" />
                                     Anterior
@@ -514,11 +515,11 @@ export function AssociationManagement() {
                                     variant="outline"
                                     size="sm"
                                     onClick={() =>
-                                      setAvailableCurrentPage(
-                                        pagination.currentPage + 1
+                                      setPaginaActualDisponibles(
+                                        pagination.paginaActual + 1
                                       )
                                     }
-                                    disabled={!pagination.hasNextPage}
+                                    disabled={!pagination.tieneSiguientePagina}
                                   >
                                     Siguiente
                                     <ChevronRight className="h-4 w-4" />
@@ -534,13 +535,13 @@ export function AssociationManagement() {
                 </div>
 
                 {/* Additional info for ended seasons */}
-                {isSeasonEnded && (
+                {haFinalizadoTemporada && (
                   <div className="mt-4">
                     <Alert className="border-blue-200 bg-blue-50 text-blue-800">
                       <Calendar className="h-4 w-4 text-blue-600" />
                       <AlertDescription>
                         Esta temporada finalizó el{" "}
-                        {formatDate(selectedSeasonObj.endDate)}. No se pueden
+                        {formatDate(temporadaSeleccionadaObj.fechaFin)}. No se pueden
                         agregar ni eliminar socios de temporadas finalizadas.
                       </AlertDescription>
                     </Alert>
@@ -564,7 +565,7 @@ export function AssociationManagement() {
 
                 {/* Season Members List */}
                 <div className="space-y-4">
-                  {paginatedSeasonMembers.length === 0 ? (
+                  {sociosTemporadaPaginados.length === 0 ? (
                     <div className="text-center py-8">
                       <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                       <p className="text-muted-foreground">
@@ -574,7 +575,7 @@ export function AssociationManagement() {
                       </p>
                     </div>
                   ) : (
-                    paginatedSeasonMembers.map((item) => (
+                    sociosTemporadaPaginados.map((item) => (
                       <div
                         key={item.id}
                         className="flex flex-col sm:flex-row gap-3 sm:gap-4 sm:items-center sm:justify-between p-4 border border-border rounded-lg hover:bg-muted/50 transition-colors"
@@ -583,10 +584,10 @@ export function AssociationManagement() {
                         <div className="flex justify-center sm:items-start gap-3 flex-1 min-w-0 ">
                           {/* Avatar */}
                           <div className="w-10 h-10 sm:w-12 sm:h-12 bg-muted rounded-full flex items-center justify-center flex-shrink-0 sm:my-auto">
-                            {item.member.photo ? (
+                            {item.socio.foto ? (
                               <img
-                                src={item.member.photo}
-                                alt={`${item.member.firstName} ${item.member.lastName}`}
+                                src={item.socio.foto}
+                                alt={`${item.socio.nombre} ${item.socio.apellido}`}
                                 className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover"
                               />
                             ) : (
@@ -598,23 +599,23 @@ export function AssociationManagement() {
                           <div className="flex flex-col justify-center sm:justify-start gap-1 flex-1 min-w-0">
                             <div className="text-center sm:text-left">
                               <h3 className="font-semibold text-foreground truncate">
-                                {item.member.firstName} {item.member.lastName}
+                                {item.socio.nombre} {item.socio.apellido}
                               </h3>
                               <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm text-muted-foreground">
                                 <span className="flex items-center gap-1 justify-center sm:justify-start">
                                   <User className="h-3 w-3" />
-                                  DNI: {item.member.firstName}
+                                  DNI: {item.socio.dni}
                                 </span>
-                                {item.member.email && (
+                                {item.socio.email && (
                                   <span className="flex items-center gap-1 justify-center sm:justify-start">
                                     <Mail className="h-3 w-3" />
-                                    {item.member.email}
+                                    {item.socio.email}
                                   </span>
                                 )}
-                                {item.member.phone && (
+                                {item.socio.telefono && (
                                   <span className="flex items-center gap-1 justify-center sm:justify-start">
                                     <Phone className="h-3 w-3" />
-                                    {item.member.phone}
+                                    {item.socio.telefono}
                                   </span>
                                 )}
                               </div>
@@ -626,23 +627,23 @@ export function AssociationManagement() {
                         <div className="flex items-center justify-between sm:justify-end gap-3 pt-2 sm:pt-0 border-t sm:border-t-0 border-border/50">
                           <Badge
                             variant={
-                              item.member.status === "active"
+                              item.socio.estado === "activo"
                                 ? "default"
                                 : "secondary"
                             }
                             className={`${
-                              item.member.status === "active"
+                              item.socio.estado === "activo"
                                 ? "bg-primary text-primary-foreground"
                                 : ""
                             } flex-shrink-0`}
                           >
-                            {item.member.status === "active"
+                            {item.socio.estado === "activo"
                               ? "Activo"
                               : "Inactivo"}
                           </Badge>
 
                           <div className="flex gap-2">
-                            {canManageMembers ? (
+                            {puedeGestionarSocios ? (
                               <AlertDialog>
                                 <AlertDialogTrigger asChild>
                                   <Button
@@ -662,7 +663,7 @@ export function AssociationManagement() {
                                     <AlertDialogDescription>
                                       Esta acción no se puede deshacer. Se eliminará
                                       permanentemente al socio{" "}
-                                      {item.member.firstName} {item.member.lastName}{" "}
+                                      {item.socio.nombre} {item.socio.apellido}{" "}
                                       de esta temporada.
                                     </AlertDialogDescription>
                                   </AlertDialogHeader>
@@ -672,7 +673,7 @@ export function AssociationManagement() {
                                     </AlertDialogCancel>
                                     <AlertDialogAction
                                       onClick={() =>
-                                        handleRemoveAssociation(item.id)
+                                        handleEliminarAsociacion(item.id)
                                       }
                                       className="bg-destructive hover:bg-destructive/90 text-destructive-foreground w-full sm:w-auto"
                                     >
@@ -706,10 +707,10 @@ export function AssociationManagement() {
                   <p className="text-sm text-muted-foreground text-center sm:text-left">
                     Mostrando {startIndex + 1} a{" "}
                     {Math.min(
-                      startIndex + membersPerPage,
-                      filteredSeasonMembers.length
+                      startIndex + sociosPorPagina,
+                      sociosTemporadaFiltrados.length
                     )}{" "}
-                    de {filteredSeasonMembers.length} socios asociados
+                    de {sociosTemporadaFiltrados.length} socios asociados
                   </p>
                   <div className="flex items-center justify-center sm:justify-end gap-2">
                     {totalPages > 1 && (
@@ -744,14 +745,14 @@ export function AssociationManagement() {
                         Mostrar:
                       </span>
                       <Select
-                        value={membersPerPage.toString()}
-                        onValueChange={handleMembersPerPageChange}
+                        value={sociosPorPagina.toString()}
+                        onValueChange={handleSociosPorPaginaChange}
                       >
                         <SelectTrigger className="w-20 h-8 text-xs">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          {PAGINATION.PAGE_SIZE_OPTIONS.map((option) => (
+                          {PAGINACION.OPCIONES_TAMAÑO_PAGINA.map((option) => (
                             <SelectItem key={option} value={option.toString()}>
                               {option}
                             </SelectItem>

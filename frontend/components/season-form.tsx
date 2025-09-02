@@ -6,99 +6,102 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Save, X } from "lucide-react";
-import { Season } from "@/lib/types";
-import { ERROR_MESSAGES, VALIDATION } from "@/lib/constants";
+import { Temporada } from "@/lib/types";
+import { MENSAJES_ERROR, VALIDACION } from "@/lib/constants";
 
 interface SeasonFormData {
-  name: string;
-  startDate: string;
-  endDate: string;
-  description?: string;
+  nombre: string;
+  fechaInicio: string;
+  fechaFin: string;
+  estado: 'activa' | 'inactiva' | 'proxima' | 'finalizada';
+  descripcion?: string;
 }
 
 interface SeasonFormProps {
-  season?: Season;
-  onSubmit: (season: Omit<Season, "id">) => void;
+  season?: Temporada;
+  onSubmit: (temporada: Omit<Temporada, "id">) => void;
   onCancel: () => void;
 }
 
 export function SeasonForm({ season, onSubmit, onCancel }: SeasonFormProps) {
-  const [formData, setFormData] = useState<SeasonFormData>({
-    name: "",
-    startDate: "",
-    endDate: "",
-    description: "",
+  const [datosFormulario, setDatosFormulario] = useState<SeasonFormData>({
+    nombre: "",
+    fechaInicio: "",
+    fechaFin: "",
+    estado: 'activa',
+    descripcion: "",
   });
 
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [errores, setErrores] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (season) {
-      setFormData({
-        name: season.name,
-        startDate: season.startDate,
-        endDate: season.endDate,
-        description: season.description || "",
+      setDatosFormulario({
+        nombre: season.nombre,
+        fechaInicio: season.fechaInicio,
+        fechaFin: season.fechaFin,
+        estado: season.estado,
+        descripcion: season.descripcion || "",
       });
     }
   }, [season]);
 
-  const validateForm = (): boolean => {
-    const newErrors: Record<string, string> = {};
+  const validarFormulario = (): boolean => {
+    const nuevosErrores: Record<string, string> = {};
 
     // Validación del nombre
-    if (!formData.name.trim()) {
-      newErrors.name = ERROR_MESSAGES.INVALID_SEASON_NAME;
+    if (!datosFormulario.nombre.trim()) {
+      nuevosErrores.nombre = MENSAJES_ERROR.NOMBRE_TEMPORADA_INVALIDO;
     }
 
     // Validación de la fecha de inicio
-    if (!formData.startDate) {
-      newErrors.startDate = ERROR_MESSAGES.INVALID_START_DATE;
+    if (!datosFormulario.fechaInicio) {
+      nuevosErrores.fechaInicio = MENSAJES_ERROR.FECHA_INICIO_INVALIDA;
     }
 
     // Validación de la fecha de fin
-    if (!formData.endDate) {
-      newErrors.endDate = ERROR_MESSAGES.INVALID_END_DATE;
+    if (!datosFormulario.fechaFin) {
+      nuevosErrores.fechaFin = MENSAJES_ERROR.FECHA_FIN_INVALIDA;
     }
 
     // Validación de las fechas cuando ambas están presentes
-    if (formData.startDate && formData.endDate) {
-      const start = new Date(formData.startDate);
-      const end = new Date(formData.endDate);
+    if (datosFormulario.fechaInicio && datosFormulario.fechaFin) {
+      const inicio = new Date(datosFormulario.fechaInicio);
+      const fin = new Date(datosFormulario.fechaFin);
 
-      if (start >= end) {
-        newErrors.endDate = ERROR_MESSAGES.INVALID_DATE_ORDER;
+      if (inicio >= fin) {
+        nuevosErrores.fechaFin = MENSAJES_ERROR.ORDEN_FECHAS_INVALIDO;
       }
     }
 
     // Validación de la descripción
-    if (formData.description && formData.description.length > 100) {
-      newErrors.description = ERROR_MESSAGES.INVALID_DESCRIPTION_LENGTH;
+    if (datosFormulario.descripcion && datosFormulario.descripcion.length > 100) {
+      nuevosErrores.descripcion = MENSAJES_ERROR.LONGITUD_DESCRIPCION_INVALIDA;
     }
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    setErrores(nuevosErrores);
+    return Object.keys(nuevosErrores).length === 0;
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!validateForm()) {
+    if (!validarFormulario()) {
       return;
     }
 
-    onSubmit(formData);
+    onSubmit(datosFormulario);
   };
 
-  const handleInputChange = (field: keyof SeasonFormData, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+  const handleCambioInput = (campo: keyof SeasonFormData, valor: string) => {
+    setDatosFormulario((prev) => ({ ...prev, [campo]: valor }));
 
     // Limpiar error cuando el usuario empieza a escribir
-    if (errors[field]) {
-      setErrors((prev) => {
-        const newErrors = { ...prev };
-        delete newErrors[field];
-        return newErrors;
+    if (errores[campo]) {
+      setErrores((prev) => {
+        const nuevosErrores = { ...prev };
+        delete nuevosErrores[campo];
+        return nuevosErrores;
       });
     }
   };
@@ -106,70 +109,70 @@ export function SeasonForm({ season, onSubmit, onCancel }: SeasonFormProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="name">Nombre de la Temporada *</Label>
+        <Label htmlFor="nombre">Nombre de la Temporada *</Label>
         <Input
-          id="name"
-          value={formData.name}
-          onChange={(e) => handleInputChange("name", e.target.value)}
+          id="nombre"
+          value={datosFormulario.nombre}
+          onChange={(e) => handleCambioInput("nombre", e.target.value)}
           placeholder="Temporada Verano 2024-2025"
           className={`w-full resize-none ${
-            errors.name ? "border-destructive" : "border-border"
+            errores.nombre ? "border-destructive" : "border-border"
           }`}
         />
-        {errors.name && <p className="text-sm text-destructive">{errors.name}</p>}
+        {errores.nombre && <p className="text-sm text-destructive">{errores.nombre}</p>}
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="startDate">Fecha de Inicio *</Label>
+          <Label htmlFor="fechaInicio">Fecha de Inicio *</Label>
           <Input
-            id="startDate"
+            id="fechaInicio"
             type="date"
-            value={formData.startDate}
-            onChange={(e) => handleInputChange("startDate", e.target.value)}
+            value={datosFormulario.fechaInicio}
+            onChange={(e) => handleCambioInput("fechaInicio", e.target.value)}
             className={`w-full resize-none ${
-              errors.startDate ? "border-destructive" : "border-border"
+              errores.fechaInicio ? "border-destructive" : "border-border"
             }`}
           />
-          {errors.startDate && (
-            <p className="text-sm text-destructive">{errors.startDate}</p>
+          {errores.fechaInicio && (
+            <p className="text-sm text-destructive">{errores.fechaInicio}</p>
           )}
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="endDate">Fecha de Fin *</Label>
+          <Label htmlFor="fechaFin">Fecha de Fin *</Label>
           <Input
-            id="endDate"
+            id="fechaFin"
             type="date"
-            value={formData.endDate}
-            onChange={(e) => handleInputChange("endDate", e.target.value)}
+            value={datosFormulario.fechaFin}
+            onChange={(e) => handleCambioInput("fechaFin", e.target.value)}
             className={`w-full resize-none ${
-              errors.endDate ? "border-destructive" : "border-border"
+              errores.fechaFin ? "border-destructive" : "border-border"
             }`}
           />
-          {errors.endDate && (
-            <p className="text-sm text-destructive">{errors.endDate}</p>
+          {errores.fechaFin && (
+            <p className="text-sm text-destructive">{errores.fechaFin}</p>
           )}
         </div>
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="description">Descripción (opcional)</Label>
+        <Label htmlFor="descripcion">Descripción (opcional)</Label>
         <Textarea
-          id="description"
-          value={formData.description}
-          onChange={(e) => handleInputChange("description", e.target.value)}
+          id="descripcion"
+          value={datosFormulario.descripcion}
+          onChange={(e) => handleCambioInput("descripcion", e.target.value)}
           placeholder="Descripción de la temporada, horarios especiales, etc."
           rows={3}
           maxLength={100}
           className={`w-full resize-none break-words ${
-            errors.description ? "border-destructive" : "border-border"
+            errores.descripcion ? "border-destructive" : "border-border"
           }`}
         />
         <div className="flex justify-between items-center text-xs text-muted-foreground">
-          <span>{formData.description?.length || 0}/100 caracteres</span>
-          {errors.description && (
-            <span className="text-destructive">{errors.description}</span>
+          <span>{datosFormulario.descripcion?.length || 0}/100 caracteres</span>
+          {errores.descripcion && (
+            <span className="text-destructive">{errores.descripcion}</span>
           )}
         </div>
       </div>

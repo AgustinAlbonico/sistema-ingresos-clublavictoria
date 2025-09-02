@@ -24,64 +24,63 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { Season } from "@/lib/types";
-import { getMockSeasons } from "@/lib/mock-data";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Temporada } from "@/lib/types";
+import { getMockTemporadas } from "@/lib/mock-data";
 import { useEffect } from "react";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 export function SeasonManagement() {
-  const [seasons, setSeasons] = useState<Season[]>([]);
+  const [temporadas, setTemporadas] = useState<Temporada[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [editingSeason, setEditingSeason] = useState<Season | null>(null);
+  const [editingTemporada, setEditingTemporada] = useState<Temporada | null>(null);
 
   // Simular carga inicial de datos (llamada a API)
   useEffect(() => {
     setIsLoading(true);
-    const loadSeasons = async () => {
+    const loadTemporadas = async () => {
       await new Promise((resolve) => setTimeout(resolve, 1200)); // Simula delay de API
-      setSeasons(getMockSeasons());
+      setTemporadas(getMockTemporadas());
       setIsLoading(false);
     };
-    loadSeasons();
+    loadTemporadas();
   }, []);
 
-  const handleCreateSeason = (seasonData: Omit<Season, 'id'>) => {
-    const newSeason: Season = {
-      ...seasonData,
+  const handleCrearTemporada = (datosTemporada: Omit<Temporada, 'id'>) => {
+    const nuevaTemporada: Temporada = {
+      ...datosTemporada,
       id: Date.now().toString(),
       // Asegurar que las fechas se guarden correctamente
-      startDate: seasonData.startDate.split('T')[0],
-      endDate: seasonData.endDate.split('T')[0],
+      fechaInicio: datosTemporada.fechaInicio.split('T')[0],
+      fechaFin: datosTemporada.fechaFin.split('T')[0],
     };
-    setSeasons([...seasons, newSeason]);
+    setTemporadas([...temporadas, nuevaTemporada]);
     setIsCreateDialogOpen(false);
     toast.success("Temporada creada exitosamente");
   };
 
-  const handleEditSeason = (seasonData: Omit<Season, 'id'>) => {
-    if (editingSeason) {
-      setSeasons(
-        seasons.map((season) =>
-          season.id === editingSeason.id
+  const handleEditarTemporada = (datosTemporada: Omit<Temporada, 'id'>) => {
+    if (editingTemporada) {
+      setTemporadas(
+        temporadas.map((temporada) =>
+          temporada.id === editingTemporada.id
             ? { 
-                ...seasonData, 
-                id: editingSeason.id,
+                ...datosTemporada, 
+                id: editingTemporada.id,
                 // Asegurar que las fechas se guarden correctamente
-                startDate: seasonData.startDate.split('T')[0],
-                endDate: seasonData.endDate.split('T')[0],
+                fechaInicio: datosTemporada.fechaInicio.split('T')[0],
+                fechaFin: datosTemporada.fechaFin.split('T')[0],
               }
-            : season
+            : temporada
         )
       );
-      setEditingSeason(null);
+      setEditingTemporada(null);
       toast.success("Temporada actualizada exitosamente");
     }
   };
 
-  const handleDeleteSeason = (seasonId: string) => {
-    setSeasons(seasons.filter((season) => season.id !== seasonId));
+  const handleEliminarTemporada = (idTemporada: string) => {
+    setTemporadas(temporadas.filter((temporada) => temporada.id !== idTemporada));
     toast.success("Temporada eliminada exitosamente");
   };
 
@@ -114,7 +113,7 @@ export function SeasonManagement() {
                   <DialogTitle>Crear Nueva Temporada</DialogTitle>
                 </DialogHeader>
                 <SeasonForm
-                  onSubmit={handleCreateSeason}
+                  onSubmit={handleCrearTemporada}
                   onCancel={() => setIsCreateDialogOpen(false)}
                 />
               </DialogContent>
@@ -135,7 +134,7 @@ export function SeasonManagement() {
             <LoadingSpinner size="lg" />
             <p className="mt-4 text-sm text-muted-foreground">Cargando temporadas...</p>
           </div>
-        ) : seasons.length === 0 ? (
+        ) : temporadas.length === 0 ? (
           <Card>
             <CardContent className="text-center py-8">
               <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
@@ -143,28 +142,28 @@ export function SeasonManagement() {
             </CardContent>
           </Card>
         ) : (
-          seasons.map((season) => (
-            <Card key={season.id}>
+          temporadas.map((temporada) => (
+            <Card key={temporada.id}>
               <CardHeader>
                 <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
                   <div className="space-y-2 flex-1">
-                    <CardTitle className="text-xl">{season.name}</CardTitle>
-                    {season.description && (
-                      <p className="text-muted-foreground">{season.description}</p>
+                    <CardTitle className="text-xl">{temporada.nombre}</CardTitle>
+                    {temporada.descripcion && (
+                      <p className="text-muted-foreground">{temporada.descripcion}</p>
                     )}
                   </div>
                   <div className="flex gap-2">
                     <Dialog
-                      open={editingSeason?.id === season.id}
+                      open={editingTemporada?.id === temporada.id}
                       onOpenChange={(open) => {
-                        if (!open) setEditingSeason(null);
+                        if (!open) setEditingTemporada(null);
                       }}
                     >
                       <DialogTrigger asChild>
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => setEditingSeason(season)}
+                          onClick={() => setEditingTemporada(temporada)}
                           className="text-primary border-primary hover:bg-primary hover:text-primary-foreground bg-transparent"
                         >
                           <Edit className="h-4 w-4" />
@@ -174,11 +173,11 @@ export function SeasonManagement() {
                         <DialogHeader>
                           <DialogTitle>Editar Temporada</DialogTitle>
                         </DialogHeader>
-                        {editingSeason && (
+                        {editingTemporada && (
                           <SeasonForm
-                            season={editingSeason}
-                            onSubmit={handleEditSeason}
-                            onCancel={() => setEditingSeason(null)}
+                            season={editingTemporada}
+                            onSubmit={handleEditarTemporada}
+                            onCancel={() => setEditingTemporada(null)}
                           />
                         )}
                       </DialogContent>
@@ -194,13 +193,13 @@ export function SeasonManagement() {
                         <AlertDialogHeader>
                           <AlertDialogTitle>¿Eliminar temporada?</AlertDialogTitle>
                           <AlertDialogDescription>
-                            Esta acción no se puede deshacer. Se eliminará permanentemente la temporada "{season.name}".
+                            Esta acción no se puede deshacer. Se eliminará permanentemente la temporada "{temporada.nombre}".
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
                           <AlertDialogCancel>Cancelar</AlertDialogCancel>
                           <AlertDialogAction
-                            onClick={() => handleDeleteSeason(season.id)}
+                            onClick={() => handleEliminarTemporada(temporada.id)}
                             className="bg-destructive hover:bg-destructive/90"
                           >
                             Eliminar
@@ -215,11 +214,11 @@ export function SeasonManagement() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <p className="text-sm font-medium">Fecha de Inicio</p>
-                    <p className="text-sm text-muted-foreground">{formatDate(season.startDate)}</p>
+                    <p className="text-sm text-muted-foreground">{formatDate(temporada.fechaInicio)}</p>
                   </div>
                   <div>
                     <p className="text-sm font-medium">Fecha de Fin</p>
-                    <p className="text-sm text-muted-foreground">{formatDate(season.endDate)}</p>
+                    <p className="text-sm text-muted-foreground">{formatDate(temporada.fechaFin)}</p>
                   </div>
                 </div>
               </CardContent>
