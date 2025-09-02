@@ -21,7 +21,7 @@ export default function RootLayout({
       <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}>
         {children}
         <Analytics />
-        <Toaster/>
+        <Toaster position='top-center' duration={3000} richColors toastOptions={{}}/>
       </body>
     </html>
   )

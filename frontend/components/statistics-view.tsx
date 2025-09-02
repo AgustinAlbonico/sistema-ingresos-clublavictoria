@@ -1,292 +1,321 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Users, Calendar, UserCheck, TrendingUp, Clock, MapPin, ChevronLeft, ChevronRight } from "lucide-react"
+import { Input } from "@/components/ui/input"
+import { Calendar, Users, TrendingUp, CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react'
+import { usePagination } from '@/hooks/use-pagination'
+import { useSearch } from '@/hooks/use-search'
+import { LoadingSpinner } from '@/components/ui/loading-spinner'
+import { ErrorMessage } from '@/components/ui/error-message'
 
-const stats = [
-  {
-    title: "Total de Socios",
-    value: "248",
-    description: "+12 este mes",
-    icon: Users,
-    trend: "up",
-  },
-  {
-    title: "Temporadas Activas",
-    value: "2",
-    description: "Temporada 2024-2025",
-    icon: Calendar,
-    trend: "neutral",
-  },
-  {
-    title: "Socios Activos",
-    value: "186",
-    description: "75% del total",
-    icon: UserCheck,
-    trend: "up",
-  },
-  {
-    title: "Nuevos Registros",
-    value: "23",
-    description: "Últimos 30 días",
-    icon: TrendingUp,
-    trend: "up",
-  },
-]
-
-interface Entry {
-  id: string
-  memberName: string
-  memberDni: string
-  isMember: boolean
-  entryTime: string
-  location: "club" | "pool"
-  paidDay?: boolean
-}
-
-// Mock entry data
-const mockEntries: Entry[] = [
-  {
-    id: "1",
-    memberName: "Ana García López",
-    memberDni: "12345678A",
-    isMember: true,
-    entryTime: "09:15",
-    location: "pool",
-  },
-  {
-    id: "2",
-    memberName: "Carlos Martínez Ruiz",
-    memberDni: "87654321B",
-    isMember: true,
-    entryTime: "10:30",
-    location: "club",
-  },
-  {
-    id: "3",
-    memberName: "María Rodríguez",
-    memberDni: "55667788E",
-    isMember: false,
-    entryTime: "11:45",
-    location: "pool",
-    paidDay: true,
-  },
-  {
-    id: "4",
-    memberName: "Juan Pérez",
-    memberDni: "99887766F",
-    isMember: false,
-    entryTime: "14:20",
-    location: "club",
-    paidDay: true,
-  },
-  {
-    id: "5",
-    memberName: "Elena Rodríguez Sánchez",
-    memberDni: "11223344C",
-    isMember: true,
-    entryTime: "15:10",
-    location: "pool",
-  },
-]
+import { EntryLog, DailyStats } from '@/lib/types'
+import { mockMembers, mockEntryLogs, mockDailyStats } from '@/lib/mock-data'
+import { PAGINATION } from '@/lib/constants'
 
 export function StatisticsView() {
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split("T")[0])
-  const [entries] = useState<Entry[]>(mockEntries)
-  const [currentPage, setCurrentPage] = useState(1)
-  const entriesPerPage = 10
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0])
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  const totalEntries = entries.length
-  const nonMemberEntries = entries.filter((entry) => !entry.isMember).length
-  const clubEntries = entries.filter((entry) => entry.location === "club").length
-  const poolEntries = entries.filter((entry) => entry.location === "pool").length
+  // Obtener estadísticas del día seleccionado
+  const selectedDayStats = useMemo(() => {
+    return mockDailyStats.find(stat => stat.date === selectedDate) || {
+      date: selectedDate,
+      totalEntries: 0,
+      currentlyInside: 0,
+      peakOccupancy: 0,
+      averageStayTime: 0
+    }
+  }, [selectedDate])
 
-  const totalPages = Math.ceil(entries.length / entriesPerPage)
-  const startIndex = (currentPage - 1) * entriesPerPage
-  const paginatedEntries = entries.slice(startIndex, startIndex + entriesPerPage)
+  // Búsqueda en logs
+  const { searchTerm, handleSearchChange, clearSearch } = useSearch({
+    onSearch: (query) => {
+      // Ahora filtra los logs reales en lugar de hacer console.log
+      console.log('Searching logs for:', query)
+    }
+  })
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("es-ES", {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    })
+  // Filtrar logs basado en el término de búsqueda
+  const filteredLogs = useMemo(() => {
+    let logs = mockEntryLogs.filter(log => log.date === selectedDate)
+    
+    if (searchTerm.trim()) {
+      const searchLower = searchTerm.toLowerCase()
+      logs = logs.filter(log =>
+        log.memberName.toLowerCase().includes(searchLower) ||
+        log.memberDni.toLowerCase().includes(searchLower)
+      )
+    }
+    
+    return logs
+  }, [selectedDate, searchTerm])
+
+  // Paginación
+  const pagination = usePagination({
+    totalItems: filteredLogs.length,
+    initialPageSize: PAGINATION.DEFAULT_PAGE_SIZE
+  })
+
+  // Calcular estadísticas específicas del día
+  const dayStats = useMemo(() => {
+    const todayLogs = filteredLogs
+    const poolEntries = todayLogs.length
+    const clubEntries = Math.floor(poolEntries * 0.3)
+    const totalEntries = poolEntries + clubEntries
+    const members = todayLogs.filter(log => 
+      mockMembers.find(m => m.id === log.memberId)?.status === 'active'
+    ).length
+    const nonMembers = totalEntries - members
+
+    return {
+      totalEntries,
+      poolEntries,
+      clubEntries,
+      members,
+      nonMembers
+    }
+  }, [filteredLogs])
+
+  // Logs paginados
+  const paginatedLogs = useMemo(() => {
+    const start = pagination.startIndex - 1
+    const end = pagination.endIndex
+    return filteredLogs.slice(start, end)
+  }, [filteredLogs, pagination.startIndex, pagination.endIndex])
+
+  // Resetear página cuando cambia la fecha
+  const handleDateChange = (date: string) => {
+    setSelectedDate(date)
+    pagination.setCurrentPage(1)
+    setError(null)
+  }
+
+  // Simular carga
+  const handleRefresh = async () => {
+    setIsLoading(true)
+    setError(null)
+    
+    try {
+      // Simular llamada a API
+      await new Promise(resolve => setTimeout(resolve, 1000))
+    } catch (err) {
+      setError('Error al cargar las estadísticas')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-4">
+        <ErrorMessage message={error} />
+        <Button onClick={handleRefresh}>Reintentar</Button>
+      </div>
+    )
   }
 
   return (
     <div className="space-y-6">
-      {/* General Statistics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat) => (
-          <Card key={stat.title} className="shadow-sm border-border">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">{stat.title}</CardTitle>
-              <stat.icon className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-foreground">{stat.value}</div>
-              <p
-                className={`text-xs mt-1 ${
-                  stat.trend === "up"
-                    ? "text-primary"
-                    : stat.trend === "down"
-                      ? "text-destructive"
-                      : "text-muted-foreground"
-                }`}
-              >
-                {stat.description}
-              </p>
-            </CardContent>
-          </Card>
-        ))}
+      {/* Header con controles */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Estadísticas</h1>
+          <p className="text-muted-foreground">
+            Análisis de ingresos y actividad del club
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            onClick={handleRefresh}
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <LoadingSpinner size="sm" />
+            ) : (
+              'Actualizar'
+            )}
+          </Button>
+        </div>
       </div>
 
-      {/* Daily Entry Statistics */}
-      <Card className="shadow-sm border-border">
+      {/* Estadísticas del Día Seleccionado */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Ingresos del Día</CardTitle>
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{dayStats.totalEntries}</div>
+            <p className="text-xs text-muted-foreground">
+              Total de entradas
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Ingresos a Pileta</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{dayStats.poolEntries}</div>
+            <p className="text-xs text-muted-foreground">
+              Acceso a pileta
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Ingresos al Club</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{dayStats.clubEntries}</div>
+            <p className="text-xs text-muted-foreground">
+              Solo club
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Socios</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{dayStats.members}</div>
+            <p className="text-xs text-muted-foreground">
+              Socios activos
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total No Socios</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{dayStats.nonMembers}</div>
+            <p className="text-xs text-muted-foreground">
+              Visitantes
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Registro de Entradas */}
+      <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-lg text-foreground">Estadísticas del Día</CardTitle>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <CardTitle className="text-lg">Registro de Entradas</CardTitle>
             <div className="flex items-center gap-2">
-              <Label htmlFor="date-filter" className="text-sm text-muted-foreground">
-                Fecha:
-              </Label>
+              <CalendarDays className="h-4 w-4 text-muted-foreground" />
               <Input
-                id="date-filter"
                 type="date"
                 value={selectedDate}
-                onChange={(e) => setSelectedDate(e.target.value)}
+                onChange={(e) => handleDateChange(e.target.value)}
                 className="w-auto"
               />
             </div>
           </div>
-          <p className="text-muted-foreground">{formatDate(selectedDate)}</p>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="text-center p-4 bg-muted/50 rounded-lg">
-              <div className="text-2xl font-bold text-foreground">{totalEntries}</div>
-              <p className="text-sm text-muted-foreground">Total Ingresos</p>
-            </div>
-            <div className="text-center p-4 bg-muted/50 rounded-lg">
-              <div className="text-2xl font-bold text-foreground">{nonMemberEntries}</div>
-              <p className="text-sm text-muted-foreground">No Socios</p>
-            </div>
-            <div className="text-center p-4 bg-muted/50 rounded-lg">
-              <div className="text-2xl font-bold text-foreground">{clubEntries}</div>
-              <p className="text-sm text-muted-foreground">Ingreso Club</p>
-            </div>
-            <div className="text-center p-4 bg-muted/50 rounded-lg">
-              <div className="text-2xl font-bold text-foreground">{poolEntries}</div>
-              <p className="text-sm text-muted-foreground">Ingreso Pileta</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Entry Log */}
-      <Card className="shadow-sm border-border">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-lg text-foreground">Registro de Ingresos</CardTitle>
-            {totalPages > 1 && (
-              <p className="text-sm text-muted-foreground">
-                Página {currentPage} de {totalPages}
-              </p>
-            )}
-          </div>
-          <p className="text-muted-foreground">Listado de personas que ingresaron al club en la fecha seleccionada</p>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {paginatedEntries.length === 0 ? (
+            {/* Búsqueda */}
+            <div className="flex items-center gap-2">
+              <Input
+                placeholder="Buscar por nombre o DNI..."
+                value={searchTerm}
+                onChange={(e) => handleSearchChange(e.target.value)}
+                className="max-w-sm"
+              />
+              {searchTerm && (
+                <Button variant="outline" size="sm" onClick={clearSearch}>
+                  Limpiar
+                </Button>
+              )}
+            </div>
+
+            {paginatedLogs.length === 0 ? (
               <div className="text-center py-8">
-                <Clock className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">No hay registros de ingreso para esta fecha</p>
+                <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground">
+                  No hay registros para la fecha seleccionada
+                </p>
               </div>
             ) : (
-              paginatedEntries.map((entry) => (
-                <div
-                  key={entry.id}
-                  className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-muted/50 transition-colors"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 bg-muted rounded-full flex items-center justify-center">
-                      <Users className="h-5 w-5 text-muted-foreground" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-foreground">{entry.memberName}</h3>
-                      <p className="text-sm text-muted-foreground">DNI: {entry.memberDni}</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-3">
-                    <div className="text-right">
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Clock className="h-4 w-4" />
-                        {entry.entryTime}
+              <>
+                <div className="space-y-3">
+                  {paginatedLogs.map((log) => (
+                    <div
+                      key={log.id}
+                      className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 border border-border rounded-lg hover:bg-muted/50 transition-colors"
+                    >
+                      <div className="flex items-center gap-3 flex-1">
+                        <div className="w-10 h-10 bg-muted rounded-full flex items-center justify-center">
+                          <Users className="h-5 w-5 text-muted-foreground" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-semibold text-foreground truncate">
+                            {log.memberName}
+                          </h3>
+                          <p className="text-sm text-muted-foreground">
+                            DNI: {log.memberDni}
+                          </p>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
-                        <MapPin className="h-4 w-4" />
-                        {entry.location === "pool" ? "Pileta" : "Club"}
+                      <div className="flex items-center gap-4 mt-3 sm:mt-0">
+                        <div className="text-sm">
+                          <span className="text-muted-foreground">Entrada:</span>{' '}
+                          <span className="font-medium">{log.entryTime}</span>
+                        </div>
                       </div>
                     </div>
-
-                    <div className="flex flex-col gap-1">
-                      <Badge
-                        variant={entry.isMember ? "default" : "secondary"}
-                        className={entry.isMember ? "bg-primary text-primary-foreground" : ""}
-                      >
-                        {entry.isMember ? "Socio" : "No Socio"}
-                      </Badge>
-                      {!entry.isMember && entry.paidDay && (
-                        <Badge variant="outline" className="text-primary border-primary">
-                          Pagó día
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
+                  ))}
                 </div>
-              ))
+
+                {/* Paginación */}
+                {pagination.totalPages > 1 && (
+                  <div className="flex items-center justify-between pt-4 border-t border-border">
+                    <p className="text-sm text-muted-foreground">
+                      Mostrando {pagination.startIndex} a {pagination.endIndex} de{' '}
+                      {pagination.totalItems} registros
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={pagination.goToPreviousPage}
+                        disabled={!pagination.hasPreviousPage}
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                        Anterior
+                      </Button>
+                      <span className="text-sm text-muted-foreground px-2">
+                        {pagination.currentPage} / {pagination.totalPages}
+                      </span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={pagination.goToNextPage}
+                        disabled={!pagination.hasNextPage}
+                      >
+                        Siguiente
+                        <ChevronRight className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </>
             )}
           </div>
-
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between mt-6 pt-4 border-t border-border">
-              <p className="text-sm text-muted-foreground">
-                Mostrando {startIndex + 1} a {Math.min(startIndex + entriesPerPage, entries.length)} de {entries.length}{" "}
-                registros
-              </p>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage(currentPage - 1)}
-                  disabled={currentPage === 1}
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                  Anterior
-                </Button>
-                <span className="text-sm text-muted-foreground">
-                  {currentPage} / {totalPages}
-                </span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage(currentPage + 1)}
-                  disabled={currentPage === totalPages}
-                >
-                  Siguiente
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          )}
         </CardContent>
       </Card>
     </div>

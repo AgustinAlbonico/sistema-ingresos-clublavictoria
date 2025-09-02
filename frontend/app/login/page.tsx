@@ -4,7 +4,7 @@ import Image from "next/image"
 export default function LoginPage() {
   return (
     <div className="min-h-screen bg-background flex items-center justify-center">
-      <div className="w-full max-w-md">
+      <div className="w-[95%] md:w-full max-w-md">
         {/* Club Logo */}
         <div className="text-center mb-8 flex flex-col items-center">
           <Image alt="Logo" src="https://clublavictoria.com.ar/static/media/logo.6dafc533b0491900e9a6.png" width={72} height={48} className="mb-4" />

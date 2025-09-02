@@ -7,30 +7,8 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { UserCheck, X } from "lucide-react"
-
-interface Member {
-  id: string
-  dni: string
-  name: string
-  email: string
-  status: "active" | "inactive"
-}
-
-interface Season {
-  id: string
-  name: string
-  startDate: string
-  endDate: string
-  status: "active" | "upcoming" | "ended"
-}
-
-interface Association {
-  id: string
-  memberId: string
-  seasonId: string
-  associatedDate: string
-  status: "active" | "inactive"
-}
+import { Member, Season, Association } from "@/lib/types"
+import { MEMBER_STATUS, SEASON_STATUS, ASSOCIATION_STATUS, ERROR_MESSAGES } from "@/lib/constants"
 
 interface AssociationFormProps {
   members: Member[]
@@ -46,24 +24,26 @@ export function AssociationForm({ members, seasons, existingAssociations, onSubm
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   // Filter active members and available seasons
-  const activeMembers = members.filter((member) => member.status === "active")
-  const availableSeasons = seasons.filter((season) => season.status === "active" || season.status === "upcoming")
+  const activeMembers = members.filter((member) => member.status === MEMBER_STATUS.ACTIVE)
+  const availableSeasons = seasons.filter((season) => 
+    season.status === SEASON_STATUS.ACTIVE || season.status === SEASON_STATUS.UPCOMING
+  )
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {}
 
     if (!selectedMember) {
-      newErrors.member = "Debe seleccionar un socio"
+      newErrors.member = ERROR_MESSAGES.REQUIRED_FIELD
     }
 
     if (!selectedSeason) {
-      newErrors.season = "Debe seleccionar una temporada"
+      newErrors.season = ERROR_MESSAGES.REQUIRED_FIELD
     }
 
     if (selectedMember && selectedSeason) {
       // Check if association already exists
       const existingAssociation = existingAssociations.find(
-        (assoc) => assoc.memberId === selectedMember && assoc.seasonId === selectedSeason && assoc.status === "active",
+        (assoc) => assoc.memberId === selectedMember && assoc.seasonId === selectedSeason && assoc.status === ASSOCIATION_STATUS.ACTIVE,
       )
 
       if (existingAssociation) {
@@ -124,7 +104,7 @@ export function AssociationForm({ members, seasons, existingAssociations, onSubm
               activeMembers.map((member) => (
                 <SelectItem key={member.id} value={member.id}>
                   <div className="flex flex-col">
-                    <span className="font-medium">{member.name}</span>
+                    <span className="font-medium">{member.firstName} {member.lastName}</span>
                     <span className="text-xs text-muted-foreground">DNI: {member.dni}</span>
                   </div>
                 </SelectItem>

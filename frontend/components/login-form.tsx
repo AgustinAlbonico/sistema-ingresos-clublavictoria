@@ -31,10 +31,7 @@ export function LoginForm() {
       if (username === "admin" && password === "admin") {
         // Redirect to dashboard (for now just show success)
         router.push("/socios")
-        toast.success("Sesión iniciada correctamente", {
-          duration: 3000,
-          position: "top-center",
-        });
+        toast.success("Sesión iniciada correctamente");
       } else {
         setError(
           "Credenciales incorrectas. Verifique su usuario y contraseña."
@@ -106,7 +103,7 @@ export function LoginForm() {
 
           <Button
             type="submit"
-            className="w-full rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground font-medium"
+            className="w-full rounded-lg bg-primary hover:bg-primary/85 text-primary-foreground font-medium"
             disabled={isLoading}
           >
             {isLoading ? (

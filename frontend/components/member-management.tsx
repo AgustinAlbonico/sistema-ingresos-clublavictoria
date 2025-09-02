@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useSearch } from "@/hooks/use-search";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,98 +27,54 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
-interface Member {
-  id: string;
-  dni: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  status: "active" | "inactive";
-  photo?: string;
-}
-
-const mockMembers: Member[] = [
-  {
-    id: "1",
-    dni: "12345678A",
-    firstName: "Ana",
-    lastName: "García López",
-    email: "ana.garcia@email.com",
-    phone: "+34 600 123 456",
-    status: "active",
-  },
-  {
-    id: "2",
-    dni: "87654321B",
-    firstName: "Carlos",
-    lastName: "Martínez Ruiz",
-    email: "carlos.martinez@email.com",
-    phone: "+34 600 654 321",
-    status: "active",
-  },
-  {
-    id: "3",
-    dni: "11223344C",
-    firstName: "Elena",
-    lastName: "Rodríguez Sánchez",
-    email: "elena.rodriguez@email.com",
-    phone: "+34 600 789 012",
-    status: "inactive",
-  },
-  {
-    id: "4",
-    dni: "55667788D",
-    firstName: "Miguel",
-    lastName: "Fernández Torres",
-    email: "miguel.fernandez@email.com",
-    phone: "+34 600 345 678",
-    status: "active",
-  },
-  {
-    id: "5",
-    dni: "99887766E",
-    firstName: "Laura",
-    lastName: "Jiménez Morales",
-    email: "laura.jimenez@email.com",
-    phone: "+34 600 111 222",
-    status: "active",
-  },
-  {
-    id: "6",
-    dni: "44556677F",
-    firstName: "David",
-    lastName: "López Herrera",
-    email: "david.lopez@email.com",
-    phone: "+34 600 333 444",
-    status: "active",
-  },
-  {
-    id: "7",
-    dni: "33445566G",
-    firstName: "María",
-    lastName: "Sánchez Ruiz",
-    email: "maria.sanchez@email.com",
-    phone: "+34 600 555 666",
-    status: "inactive",
-  },
-  {
-    id: "8",
-    dni: "22334455H",
-    firstName: "José",
-    lastName: "Morales García",
-    email: "jose.morales@email.com",
-    phone: "+34 600 777 888",
-    status: "active",
-  },
-];
+// Importar tipos y datos centralizados
+import { Member } from "@/lib/types";
+import { mockMembers } from "@/lib/mock-data";
+import { PAGINATION, SUCCESS_MESSAGES, MEMBER_STATUS } from "@/lib/constants";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 export function MemberManagement() {
-  const [members, setMembers] = useState<Member[]>(mockMembers);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [members, setMembers] = useState<Member[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const membersPerPage = 5;
+  const [membersPerPage, setMembersPerPage] = useState<number>(
+    PAGINATION.DEFAULT_PAGE_SIZE
+  );
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Simular carga inicial de datos
+  useEffect(() => {
+    const loadMembers = async () => {
+      try {
+        // Simular delay de API
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+        setMembers(mockMembers);
+      } catch (error) {
+        console.error("Error loading members:", error);
+        toast.error("Error al cargar socios");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadMembers();
+  }, []);
+
+  // Hook de búsqueda con debounce
+  const { searchTerm, handleSearchChange, clearSearch } = useSearch({
+    onSearch: async (query) => {
+      console.log("Searching members for:", query);
+      setCurrentPage(1);
+    },
+  });
 
   // Filter members based on search term
   const filteredMembers = members
@@ -142,13 +99,41 @@ export function MemberManagement() {
     startIndex + membersPerPage
   );
 
-  const handleSearchChange = (value: string) => {
-    setSearchTerm(value);
-    setCurrentPage(1);
+  // Eliminar funciones manuales - ahora usa el hook
+  // const handleSearchChange = (value: string) => {
+  //   setSearchTerm(value);
+  //   setCurrentPage(1);
+  // };
+
+  // const clearSearch = () => {
+  //   setSearchTerm("");
+  //   setCurrentPage(1);
+  // };
+
+  // TODO: Cuando se implemente la API, esta función debería hacer una llamada DELETE
+  const handleDeleteMember = async (memberId: string) => {
+    try {
+      setMembers(members.filter((member) => member.id !== memberId));
+      toast.success(SUCCESS_MESSAGES.MEMBER_DELETED, {
+        position: "top-center",
+        duration: 3000,
+      });
+    } catch (error) {
+      console.error("Error deleting member:", error);
+      toast.error("Error al eliminar socio");
+    }
   };
 
-  const handleDeleteMember = (memberId: string) => {
-    setMembers(members.filter((member) => member.id !== memberId));
+  const handleMembersPerPageChange = (value: string) => {
+    setMembersPerPage(parseInt(value));
+    setCurrentPage(1);
+
+    // TODO: Cuando se implemente la API, debería hacer una nueva llamada
+    // con el nuevo límite por página
+    /*
+    // Esto se haría automáticamente en el useEffect de carga de datos
+    // cuando cambie membersPerPage o currentPage
+    */
   };
 
   return (
@@ -163,16 +148,26 @@ export function MemberManagement() {
         <CardContent>
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4 " />
               <Input
                 placeholder="Buscar por nombre, DNI o email..."
                 value={searchTerm}
                 onChange={(e) => handleSearchChange(e.target.value)}
-                className="pl-10 rounded-lg border-border focus:ring-primary focus:border-primary"
+                className="pl-10 rounded-lg border-border focus:ring-primary focus:border-primary text-sm"
               />
             </div>
+            {searchTerm && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={clearSearch}
+                className="whitespace-nowrap"
+              >
+                Limpiar
+              </Button>
+            )}
             <Link href="/socios/crear">
-              <Button className="bg-primary hover:bg-primary/85 text-primary-foreground rounded-lg">
+              <Button className="bg-primary hover:bg-primary/85 text-primary-foreground rounded-lg whitespace-nowrap">
                 <Plus className="h-4 w-4 mr-2" />
                 Crear Socio
               </Button>
@@ -197,7 +192,14 @@ export function MemberManagement() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {paginatedMembers.length === 0 ? (
+            {isLoading ? (
+              <div className="text-center py-12">
+                <LoadingSpinner size="lg" />
+                <p className="mt-4 text-sm text-muted-foreground">
+                  Cargando socios...
+                </p>
+              </div>
+            ) : paginatedMembers.length === 0 ? (
               <div className="text-center py-8">
                 <User className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                 <p className="text-muted-foreground">
@@ -210,45 +212,61 @@ export function MemberManagement() {
               paginatedMembers.map((member) => (
                 <div
                   key={member.id}
-                  className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-muted/50 transition-colors"
+                  className="flex flex-col sm:flex-row gap-3 sm:gap-4 sm:items-center sm:justify-between p-4 border border-border rounded-lg hover:bg-muted/50 transition-colors"
                 >
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-muted rounded-full flex items-center justify-center">
+                  {/* Member Info Section */}
+                  <div className="flex justify-center sm:items-start gap-3 flex-1 min-w-0 ">
+                    {/* Avatar - visible on mobile too but smaller */}
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-muted rounded-full flex items-center justify-center flex-shrink-0 sm:my-auto ">
                       {member.photo ? (
                         <img
                           src={member.photo || "/placeholder.svg"}
                           alt={`${member.firstName} ${member.lastName}`}
-                          className="w-12 h-12 rounded-full object-cover"
+                          className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover"
                         />
                       ) : (
-                        <User className="h-6 w-6 text-muted-foreground" />
+                        <User className="h-5 w-5 sm:h-6 sm:w-6 text-muted-foreground" />
                       )}
                     </div>
-                    <div>
-                      <h3 className="font-semibold text-foreground">
+
+                    {/* Member Details */}
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-foreground text-base sm:text-lg truncate">
                         {member.lastName}, {member.firstName}
                       </h3>
-                      <p className="text-sm text-muted-foreground">
-                        DNI: {member.dni}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        {member.email}
-                      </p>
+                      <div className="space-y-1">
+                        <p className="text-sm text-muted-foreground">
+                          DNI: {member.dni}
+                        </p>
+                        <p className="text-sm text-muted-foreground truncate">
+                          {member.email}
+                        </p>
+                        {member.phone && (
+                          <p className="text-sm text-muted-foreground">
+                            {member.phone}
+                          </p>
+                        )}
+                      </div>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-3">
+                  {/* Actions Section */}
+                  <div className="flex items-center justify-between sm:justify-end gap-3 pt-2 sm:pt-0 border-t sm:border-t-0 border-border/50">
                     <Badge
                       variant={
-                        member.status === "active" ? "default" : "secondary"
+                        member.status === MEMBER_STATUS.ACTIVE
+                          ? "default"
+                          : "secondary"
                       }
-                      className={
-                        member.status === "active"
+                      className={`${
+                        member.status === MEMBER_STATUS.ACTIVE
                           ? "bg-primary text-primary-foreground"
                           : ""
-                      }
+                      } flex-shrink-0`}
                     >
-                      {member.status === "active" ? "Activo" : "Inactivo"}
+                      {member.status === MEMBER_STATUS.ACTIVE
+                        ? "Activo"
+                        : "Inactivo"}
                     </Badge>
 
                     <div className="flex gap-2">
@@ -270,9 +288,10 @@ export function MemberManagement() {
                             className="text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground bg-transparent"
                           >
                             <Trash2 className="h-4 w-4" />
+                            <span className="sr-only">Eliminar</span>
                           </Button>
                         </AlertDialogTrigger>
-                        <AlertDialogContent>
+                        <AlertDialogContent className="w-[95%] md:w-full mx-auto">
                           <AlertDialogHeader>
                             <AlertDialogTitle>
                               ¿Eliminar socio?
@@ -283,11 +302,13 @@ export function MemberManagement() {
                               {member.lastName} del sistema.
                             </AlertDialogDescription>
                           </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                          <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+                            <AlertDialogCancel className="w-full sm:w-auto">
+                              Cancelar
+                            </AlertDialogCancel>
                             <AlertDialogAction
                               onClick={() => handleDeleteMember(member.id)}
-                              className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+                              className="bg-destructive hover:bg-destructive/90 text-destructive-foreground w-full sm:w-auto"
                             >
                               Eliminar
                             </AlertDialogAction>
@@ -301,38 +322,63 @@ export function MemberManagement() {
             )}
           </div>
 
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between mt-6 pt-4 border-t border-border">
-              <p className="text-sm text-muted-foreground">
-                Mostrando {startIndex + 1} a{" "}
-                {Math.min(startIndex + membersPerPage, filteredMembers.length)}{" "}
-                de {filteredMembers.length} socios
-              </p>
+          {/* Pagination Controls - Always show to keep items per page selector visible */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between mt-6 pt-4 border-t border-border gap-3">
+            <p className="text-sm text-muted-foreground text-center sm:text-left">
+              Mostrando {startIndex + 1} a{" "}
+              {Math.min(startIndex + membersPerPage, filteredMembers.length)} de{" "}
+              {filteredMembers.length} socios
+            </p>
+            <div className="flex flex-col sm:flex-row items-center justify-center sm:justify-end gap-2">
+              {totalPages > 1 && (
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className="flex-shrink-0"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                    <span className="hidden xs:inline ml-1">Anterior</span>
+                  </Button>
+                  <span className="text-sm text-muted-foreground px-2 py-1 bg-muted rounded min-w-[60px] text-center">
+                    {currentPage} / {totalPages}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    className="flex-shrink-0"
+                  >
+                    <span className="hidden xs:inline mr-1">Siguiente</span>
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
               <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage(currentPage - 1)}
-                  disabled={currentPage === 1}
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                  Anterior
-                </Button>
-                <span className="text-sm text-muted-foreground">
-                  {currentPage} / {totalPages}
+                <span className="text-xs text-muted-foreground whitespace-nowrap">
+                  Mostrar:
                 </span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage(currentPage + 1)}
-                  disabled={currentPage === totalPages}
+                <Select
+                  value={membersPerPage.toString()}
+                  onValueChange={handleMembersPerPageChange}
                 >
-                  Siguiente
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
+                  <SelectTrigger className="w-20 h-8 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PAGINATION.PAGE_SIZE_OPTIONS.map((option) => (
+                      <SelectItem key={option} value={option.toString()}>
+                        {option}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
-          )}
+          </div>
         </CardContent>
       </Card>
     </div>
