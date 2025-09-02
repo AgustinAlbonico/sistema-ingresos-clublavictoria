@@ -1,0 +1,298 @@
+Based on the frontend application analysis, I'll provide you with a comprehensive backend architecture using NestJS for your club membership management system.
+
+## **1. ENTIDADES PRINCIPALES Y SUS RELACIONES**
+
+### **Entidades Core:**
+
+**Socio (Member)**
+- id: UUID (PK)
+- dni: string (unique)
+- nombre: string
+- apellido: string
+- email: string (unique)
+- telefono: string (optional)
+- fechaNacimiento: Date
+- genero: enum ('M', 'F')
+- estado: enum ('activo', 'inactivo')
+- direccion: string
+- foto: string (optional, URL/path)
+- fechaIngreso: Date
+- fechaCreacion: Date
+- fechaActualizacion: Date
+
+**Temporada (Season)**
+- id: UUID (PK)
+- nombre: string
+- fechaInicio: Date
+- fechaFin: Date
+- estado: enum ('activa', 'inactiva', 'proxima', 'finalizada')
+- descripcion: string (optional)
+- capacidadMaxima: number (optional)
+- fechaCreacion: Date
+- fechaActualizacion: Date
+
+**Asociacion (Membership Association)**
+- id: UUID (PK)
+- socioId: UUID (FK → Socio)
+- temporadaId: UUID (FK → Temporada)
+- fechaAsociacion: Date
+- estado: enum ('activa', 'inactiva')
+- fechaCreacion: Date
+- fechaActualizacion: Date
+
+**RegistroEntrada (Entry Log)**
+- id: UUID (PK)
+- socioId: UUID (FK → Socio)
+- tipoAcceso: enum ('club', 'pileta', 'ambos')
+- fechaEntrada: Date
+- horaEntrada: Time
+- fechaSalida: Date (optional)
+- horaSalida: Time (optional)
+- observaciones: string (optional)
+
+**Usuario (User/Admin)**
+- id: UUID (PK)
+- email: string (unique)
+- password: string (hashed)
+- nombre: string
+- apellido: string
+- rol: enum ('admin', 'recepcionista', 'supervisor')
+- estado: enum ('activo', 'inactivo')
+- ultimoAcceso: Date
+- fechaCreacion: Date
+
+### **Relaciones:**
+- Socio ↔ Asociacion (1:N)
+- Temporada ↔ Asociacion (1:N)
+- Socio ↔ RegistroEntrada (1:N)
+- Asociacion: Socio + Temporada (N:M through junction table)
+
+## **2. ENDPOINTS REST RECOMENDADOS**
+
+### **Auth Module**
+```
+POST   /auth/login                    # Login de usuarios
+POST   /auth/logout                   # Logout
+GET    /auth/profile                  # Obtener perfil del usuario logueado
+PUT    /auth/profile                  # Actualizar perfil
+POST   /auth/refresh                  # Renovar token
+```
+
+### **Socios Module**
+```
+GET    /socios                        # Listar socios (con filtros, paginación)
+GET    /socios/:id                    # Obtener socio por ID
+POST   /socios                        # Crear nuevo socio
+PUT    /socios/:id                    # Actualizar socio completo
+PATCH  /socios/:id                    # Actualización parcial
+DELETE /socios/:id                    # Eliminar socio (soft delete)
+GET    /socios/search                 # Búsqueda avanzada
+POST   /socios/:id/photo              # Subir foto del socio
+DELETE /socios/:id/photo              # Eliminar foto
+GET    /socios/export                 # Exportar lista de socios
+```
+
+### **Temporadas Module**
+```
+GET    /temporadas                    # Listar temporadas
+GET    /temporadas/:id                # Obtener temporada por ID
+POST   /temporadas                    # Crear nueva temporada
+PUT    /temporadas/:id                # Actualizar temporada
+DELETE /temporadas/:id                # Eliminar temporada
+GET    /temporadas/activas            # Obtener solo temporadas activas
+```
+
+### **Asociaciones Module**
+```
+GET    /asociaciones                  # Listar todas las asociaciones
+GET    /temporadas/:temporadaId/socios # Socios de una temporada específica
+GET    /socios/:socioId/temporadas    # Temporadas de un socio específico
+POST   /asociaciones                  # Crear nueva asociación
+DELETE /asociaciones/:id              # Eliminar asociación
+GET    /temporadas/:id/socios-disponibles # Socios disponibles para asociar
+POST   /asociaciones/bulk             # Asociar múltiples socios a una temporada
+```
+
+### **Registros de Entrada Module**
+```
+GET    /registros-entrada             # Listar registros con filtros
+GET    /registros-entrada/today       # Registros del día actual
+POST   /registros-entrada             # Registrar nueva entrada
+PUT    /registros-entrada/:id/salida  # Registrar salida
+GET    /registros-entrada/socio/:socioId # Historial de un socio
+GET    /registros-entrada/estadisticas # Estadísticas de entradas
+```
+
+### **Estadísticas Module**
+```
+GET    /estadisticas/dashboard        # Estadísticas principales
+GET    /estadisticas/diarias/:fecha   # Estadísticas de un día específico
+GET    /estadisticas/rango            # Estadísticas por rango de fechas
+GET    /estadisticas/socios           # Estadísticas de socios
+GET    /estadisticas/temporadas       # Estadísticas de temporadas
+GET    /estadisticas/ocupacion        # Estadísticas de ocupación
+```
+
+### **Usuarios Module** (Admin)
+```
+GET    /usuarios                      # Listar usuarios del sistema
+POST   /usuarios                      # Crear nuevo usuario
+PUT    /usuarios/:id                  # Actualizar usuario
+DELETE /usuarios/:id                  # Eliminar usuario
+PATCH  /usuarios/:id/estado           # Cambiar estado del usuario
+```
+
+## **3. MÓDULOS Y SERVICIOS NESTJS SUGERIDOS**
+
+### **Core Modules:**
+
+**AuthModule**
+- AuthService
+- AuthController
+- JwtStrategy
+- LocalStrategy
+- AuthGuard
+
+**SociosModule**
+- SociosService
+- SociosController
+- SociosRepository
+
+**TemporadasModule**
+- TemporadasService
+- TemporadasController
+- TemporadasRepository
+
+**AsociacionesModule**
+- AsociacionesService
+- AsociacionesController
+- AsociacionesRepository
+
+**RegistrosEntradaModule**
+- RegistrosEntradaService
+- RegistrosEntradaController
+- RegistrosEntradaRepository
+
+**EstadisticasModule**
+- EstadisticasService
+- EstadisticasController
+
+**UsuariosModule**
+- UsuariosService
+- UsuariosController
+- UsuariosRepository
+
+### **Shared Modules:**
+
+**DatabaseModule**
+- Database configuration
+- TypeORM/Prisma setup
+
+**FileUploadModule**
+- FileUploadService (para fotos de socios)
+- CloudinaryService o S3Service
+
+**ValidationModule**
+- Custom validators
+- DTOs validation
+
+**CacheModule**
+- Redis configuration
+- Cache service
+
+**LoggingModule**
+- Winston logger
+- Audit trail service
+
+## **4. FUNCIONALIDADES TRANSVERSALES CRÍTICAS**
+
+### **Autenticación y Autorización:**
+- JWT tokens con refresh tokens
+- Role-based access control (RBAC)
+- Guards para proteger endpoints
+- Rate limiting para prevenir ataques
+
+### **Validación y DTOs:**
+- Class-validator para validaciones
+- DTOs específicos para cada endpoint
+- Validación de DNI argentino
+- Validación de rangos de fechas
+
+### **Manejo de Archivos:**
+- Upload de fotos de socios
+- Redimensionamiento automático
+- Storage en cloud (Cloudinary/AWS S3)
+- Validación de tipos de archivo
+
+### **Base de Datos:**
+- Soft deletes para registros importantes
+- Auditoría de cambios (created_at, updated_at, deleted_at)
+- Índices optimizados para búsquedas
+- Migraciones versionadas
+
+### **Logging y Monitoreo:**
+- Logs estructurados (Winston)
+- Audit trail para cambios críticos
+- Health checks endpoints
+- Métricas de performance
+
+### **Caché y Performance:**
+- Redis para caché de datos frecuentes
+- Paginación optimizada
+- Lazy loading para relaciones
+- Query optimization
+
+### **Seguridad:**
+- Helmet para headers de seguridad
+- CORS configurado apropiadamente
+- Input sanitization
+- Rate limiting per endpoint
+- Validación estricta de tipos
+
+### **Manejo de Errores:**
+- Exception filters globales
+- Error responses estandarizados
+- Logging de errores críticos
+- Rollback automático en transacciones
+
+## **5. OBSERVACIONES DE MEJORES PRÁCTICAS**
+
+### **Arquitectura:**
+- **Repository Pattern**: Separa lógica de base de datos
+- **Service Layer**: Lógica de negocio centralizada
+- **DTO Pattern**: Validación y transformación de datos
+- **Guard Pattern**: Autorización granular
+
+### **Base de Datos:**
+- **Soft Deletes**: Para registros de socios y asociaciones
+- **Timestamps**: Auditoria completa de cambios
+- **Foreign Keys**: Integridad referencial estricta
+- **Índices**: En DNI, email, fechas de búsqueda frecuente
+
+### **Performance:**
+- **Paginación**: Implementar en todos los listados
+- **Eager/Lazy Loading**: Optimizar queries de relaciones
+- **Database Connection Pool**: Configurar apropiadamente
+- **Caché Strategy**: Para estadísticas y datos estáticos
+
+### **Seguridad Específica:**
+- **DNI Validation**: Algoritmo de validación de DNI argentino
+- **Email Uniqueness**: A nivel de base de datos y aplicación
+- **Password Policy**: Para usuarios administrativos
+- **Session Management**: Control de sesiones concurrentes
+
+### **Business Logic:**
+- **Validation Rules**: 
+  - No asociar socio inactivo a temporada
+  - No eliminar temporada con socios asociados
+  - Validar rangos de fechas de temporadas
+- **State Management**: Estados de entidades bien definidos
+- **Audit Trail**: Para cambios en datos críticos
+
+### **API Design:**
+- **RESTful**: Seguir convenciones REST estrictas
+- **Versioning**: Preparar para futuras versiones
+- **Error Codes**: Códigos de error estandarizados
+- **Documentation**: OpenAPI/Swagger automático
+
+Esta arquitectura te proporcionará una base sólida, escalable y mantenible para el sistema de gestión del club, siguiendo las mejores prácticas de NestJS y desarrollo backend moderno.
