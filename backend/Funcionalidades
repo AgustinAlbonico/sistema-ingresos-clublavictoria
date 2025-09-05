@@ -5,23 +5,21 @@ Based on the frontend application analysis, I'll provide you with a comprehensiv
 ### **Entidades Core:**
 
 **Socio (Member)**
-- id: UUID (PK)
+- idSocio: int(PK)
 - dni: string (unique)
 - nombre: string
 - apellido: string
-- email: string (unique)
+- email: string (unique)(optional)
 - telefono: string (optional)
 - fechaNacimiento: Date
 - genero: enum ('M', 'F')
 - estado: enum ('activo', 'inactivo')
 - direccion: string
 - foto: string (optional, URL/path)
-- fechaIngreso: Date
-- fechaCreacion: Date
-- fechaActualizacion: Date
+- fechaIngreso: Date(default today)
 
 **Temporada (Season)**
-- id: UUID (PK)
+- idTemporada: UUID (PK)
 - nombre: string
 - fechaInicio: Date
 - fechaFin: Date

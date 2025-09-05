@@ -21,16 +21,16 @@ const mockSocio: Socio = {
   email: "carlos@email.com",
   telefono: "1122334455",
   fechaNacimiento: "1990-05-15",
-  genero: 'M',
-  estado: 'activo',
-  foto: "https://rickandmortyapi.com/api/character/avatar/146.jpeg",
+  genero: "M",
+  estado: "activo",
+  foto: "https://media.istockphoto.com/id/1090878494/es/foto/retrato-de-joven-sonriente-a-hombre-guapo-en-camiseta-polo-azul-aislado-sobre-fondo-gris-de.jpg?s=2048x2048&w=is&k=20&c=UTeB9pQD83M3ZkbZF1G48vOkjNm6uYUaizx2XBCPszM=",
 };
 
 export default function EditMemberPage() {
   const router = useRouter();
   const { id } = useParams();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   const [photo, setPhoto] = useState<File | null>(null);
   const [photoError, setPhotoError] = useState<string | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
@@ -45,23 +45,25 @@ export default function EditMemberPage() {
     }
   }, [id]);
 
-  const handleUpdateSocio = async (formData: Omit<Socio, 'id'>) => {
+  const handleUpdateSocio = async (formData: Omit<Socio, "id">) => {
     try {
       setIsSubmitting(true);
       console.log("Actualizando socio:", { ...formData, foto: photoPreview });
-      
+
       // Aquí iría la llamada a la API para actualizar
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
       // Mostrar toast de éxito
       toast.success("El socio se ha actualizado correctamente.");
-      
+
       // Redirigir después de actualizar el socio
       router.push("/socios");
     } catch (error) {
       console.error("Error al actualizar socio:", error);
       // Mostrar toast de error
-      toast.error("No se pudo actualizar el socio. Por favor, intente nuevamente.");
+      toast.error(
+        "No se pudo actualizar el socio. Por favor, intente nuevamente."
+      );
     } finally {
       setIsSubmitting(false);
     }
