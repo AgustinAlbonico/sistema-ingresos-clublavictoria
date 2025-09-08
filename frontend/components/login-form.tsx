@@ -3,43 +3,42 @@
 import type React from "react";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { AxiosError } from "axios";
+import { Eye, EyeOff, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Eye, EyeOff, LogIn } from "lucide-react";
-import { toast } from "sonner";
-import { useRouter } from "next/navigation";
+import { useLogin } from "@/hooks/useAuth";
 
 export function LoginForm() {
-  const [username, setUsername] = useState("");
+  const [usuario, setUsuario] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-
-  const router = useRouter();
+  const loginMutation = useLogin();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    setIsLoading(true);
 
-    // Simulate login process
-    setTimeout(() => {
-      if (username === "admin" && password === "admin") {
-        // Redirect to dashboard (for now just show success)
-        router.push("/socios")
-        toast.success("Sesión iniciada correctamente");
-      } else {
-        setError(
-          "Credenciales incorrectas. Verifique su usuario y contraseña."
-        );
+    if (!usuario || !password) {
+      setError("Por favor ingresa usuario y contraseña");
+      return;
+    }
+
+    try {
+      await loginMutation.mutateAsync({ usuario, password });
+    } catch (err) {
+      if (err instanceof AxiosError) {
+        setError(err.response?.data.message);
       }
-      setIsLoading(false);
-    }, 1000);
+    }
   };
+
+  const router = useRouter();
 
   return (
     <Card className="shadow-lg border-border">
@@ -58,9 +57,10 @@ export function LoginForm() {
               id="username"
               type="username"
               placeholder="admin"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              value={usuario}
+              onChange={(e) => setUsuario(e.target.value)}
               required
+              disabled={loginMutation.isPending}
               className="rounded-lg border-border focus:ring-primary focus:border-primary"
             />
           </div>
@@ -77,6 +77,7 @@ export function LoginForm() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                disabled={loginMutation.isPending}
                 className="rounded-lg border-border focus:ring-primary focus:border-primary pr-10"
               />
               <Button
@@ -104,9 +105,9 @@ export function LoginForm() {
           <Button
             type="submit"
             className="w-full rounded-lg bg-primary hover:bg-primary/85 text-primary-foreground font-medium"
-            disabled={isLoading}
+            disabled={loginMutation.isPending}
           >
-            {isLoading ? (
+            {loginMutation.isPending ? (
               <div className="flex items-center gap-2">
                 <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
                 Iniciando sesión...

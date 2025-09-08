@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { BarChart3, Users, Calendar, UserCheck, LogOut, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
+import { authService } from "@/lib/api/auth";
 
 interface SidebarProps {
   onClose?: () => void;
@@ -21,7 +22,7 @@ export function Sidebar({ onClose }: SidebarProps) {
   const pathname = usePathname();
 
   const handleLogout = () => {
-    // Redirect to login page
+    authService.logout();
     window.location.href = "/login";
   };
 
@@ -30,7 +31,12 @@ export function Sidebar({ onClose }: SidebarProps) {
       {/* Header */}
       <div className="flex items-center justify-between p-6 border-b border-sidebar-border">
         <div className="flex items-center gap-3">
-          <Image alt="Logo" src="https://clublavictoria.com.ar/static/media/logo.6dafc533b0491900e9a6.png" width={32} height={32}/>
+          <Image
+            alt="Logo"
+            src="https://clublavictoria.com.ar/static/media/logo.6dafc533b0491900e9a6.png"
+            width={32}
+            height={32}
+          />
           <div>
             <h2 className="font-semibold text-sidebar-foreground">
               Club La Victoria

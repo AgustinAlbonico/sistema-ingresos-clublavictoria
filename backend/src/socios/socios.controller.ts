@@ -15,10 +15,10 @@ import { UpdateSocioDto } from './dto/update-socio.dto';
 export class SociosController {
   constructor(private readonly sociosService: SociosService) {}
 
-  @Post()
-  create(@Body() createSocioDto: CreateSocioDto) {
-    return this.sociosService.create(createSocioDto);
-  }
+  // @Post()
+  // create(@Body() createSocioDto: CreateSocioDto) {
+  //   return this.sociosService.create(createSocioDto);
+  // }
 
   @Get()
   findAll() {
@@ -30,10 +30,10 @@ export class SociosController {
     return this.sociosService.findOne(+id);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateSocioDto: UpdateSocioDto) {
-    return this.sociosService.update(+id, updateSocioDto);
-  }
+  // @Patch(':id')
+  // update(@Param('id') id: string, @Body() updateSocioDto: UpdateSocioDto) {
+  //   return this.sociosService.update(+id, updateSocioDto);
+  // }
 
   @Delete(':id')
   remove(@Param('id') id: string) {

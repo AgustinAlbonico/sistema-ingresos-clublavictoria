@@ -10,6 +10,33 @@ async function bootstrap() {
   const config = app.get(AppConfigService);
   app.setGlobalPrefix('api');
   app.use(helmet());
+  app.enableCors({
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps or curl requests)
+      if (!origin) return callback(null, true);
+
+      if (
+        ['http://localhost:3000', 'http://192.168.100.7:3000'].indexOf(
+          origin,
+        ) === -1
+      ) {
+        const msg =
+          'The CORS policy for this site does not allow access from the specified Origin.';
+        return callback(new Error(msg), false);
+      }
+      return callback(null, true);
+    },
+    credentials: true, // Allow credentials (cookies, authorization headers)
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'X-Requested-With',
+      'Accept',
+      'X-XSRF-TOKEN',
+    ],
+    exposedHeaders: ['Authorization'],
+  });
 
   app.useGlobalPipes(
     new ValidationPipe({

@@ -38,7 +38,6 @@ import { AppConfigModule } from './config/AppConfig/app-config.module';
           Usuario,
           RegistroIngreso,
         ],
-        logging: true,
         synchronize: false,
       }),
     }),

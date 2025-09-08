@@ -4,6 +4,7 @@ import { UsuarioRepository } from './repositories/usuario.repository';
 import bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { IJwtPayload } from './entities/jwt-payload.interface';
+import { CustomError } from 'src/constants/errors/custom-error';
 
 @Injectable()
 export class AuthService {
@@ -15,7 +16,7 @@ export class AuthService {
   async validateUser(input: LoginDto) {
     const userDb = await this.usuarioRepository.findByUsername(input.usuario);
     if (!userDb) {
-      throw new Error('Usuario no encontrado');
+      throw new CustomError('Usuario no encontrado', 404);
     }
 
     const isPasswordValid = await bcrypt.compare(
@@ -23,7 +24,7 @@ export class AuthService {
       userDb.password,
     );
     if (!isPasswordValid) {
-      throw new Error('La contraseña ingresada es incorrecta');
+      throw new CustomError('La contraseña ingresada es incorrecta', 401);
     }
 
     return userDb;

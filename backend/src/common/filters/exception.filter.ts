@@ -2,12 +2,13 @@ import {
   ExceptionFilter,
   Catch,
   ArgumentsHost,
-  HttpException,
   HttpStatus,
+  HttpException,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
+import { CustomError } from '../../constants/errors/custom-error';
 
-@Catch() // atrapa TODO tipo de excepción
+@Catch()
 export class GlobalHttpExceptionFilter implements ExceptionFilter {
   catch(exception: unknown, host: ArgumentsHost): void {
     const ctx = host.switchToHttp();
@@ -17,9 +18,11 @@ export class GlobalHttpExceptionFilter implements ExceptionFilter {
     let status: number = HttpStatus.INTERNAL_SERVER_ERROR;
     let message: string | string[] = 'Internal server error';
 
-    if (exception instanceof HttpException) {
+    if (exception instanceof CustomError) {
+      status = exception.statusCode;
+      message = exception.message;
+    } else if (exception instanceof HttpException) {
       status = exception.getStatus();
-
       const res = exception.getResponse();
       if (typeof res === 'string') {
         message = res;
