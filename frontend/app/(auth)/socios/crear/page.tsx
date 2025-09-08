@@ -25,6 +25,8 @@ export default function CreateMemberPage() {
     try {
       setIsSubmitting(true);
       console.log("Creando socio:", { ...formData, foto: photoPreview });
+
+      console.log('tipo de foto: ' + typeof photoPreview)
       
       // Aquí iría la llamada a la API
       await new Promise(resolve => setTimeout(resolve, 1000));

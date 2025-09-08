@@ -9,9 +9,9 @@ USE club_deportivo;
 
 
 -- =============================================
--- TABLA: USUARIOS
+-- TABLA: USUARIO
 -- =============================================
-CREATE TABLE USUARIOS (
+CREATE TABLE USUARIO (
     id_usuario INT AUTO_INCREMENT PRIMARY KEY,
     usuario VARCHAR(100) NOT NULL UNIQUE,
     password VARCHAR(100) NOT NULL,
@@ -20,9 +20,9 @@ CREATE TABLE USUARIOS (
 );
 
 -- =============================================
--- TABLA: SOCIOS
+-- TABLA: SOCIO
 -- =============================================
-CREATE TABLE SOCIOS (
+CREATE TABLE SOCIO (
     id_socio INT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
     apellido VARCHAR(100) NOT NULL,
