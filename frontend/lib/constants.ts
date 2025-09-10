@@ -1,16 +1,19 @@
 // Constantes centralizadas para el sistema de gestión del club
 
 // Géneros
-export const GENERO = {
-  MASCULINO: 'M',
-  FEMENINO: 'F'
-} as const;
+export enum GENERO {
+  MASCULINO = 'MASCULINO',
+  FEMENINO = 'FEMENINO'
+} 
 
 // Estados de socios
-export const ESTADO_SOCIO = {
-  ACTIVO: 'activo',
-  INACTIVO: 'inactivo'
-} as const;
+export enum ESTADO_SOCIO {
+  ACTIVO = 'ACTIVO',
+  INACTIVO = 'INACTIVO'
+}
+
+//Stale time para React Query
+export const STALE_TIME = 1000 * 60 * 5;
 
 // Estados de temporadas
 export const ESTADO_TEMPORADA = {
@@ -84,6 +87,8 @@ export const MENSAJES_ERROR = {
 // Mensajes de éxito
 export const MENSAJES_EXITO = {
   SOCIO_ELIMINADO: 'Socio eliminado exitosamente.',
+  SOCIO_CREADO: 'Socio creado exitosamente.',
+  SOCIO_ACTUALIZADO: 'Socio actualizado exitosamente.',
   ASOCIACION_CREADA: 'Socio agregado a la temporada.',
   ASOCIACION_ELIMINADA: 'Socio removido de la temporada.'
 } as const;

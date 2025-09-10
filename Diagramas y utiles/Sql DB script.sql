@@ -26,7 +26,7 @@ CREATE TABLE SOCIO (
     id_socio INT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
     apellido VARCHAR(100) NOT NULL,
-    dni VARCHAR(20) UNIQUE NOT NULL,
+    dni VARCHAR(20) UNIQUE,
     telefono VARCHAR(20),
     email VARCHAR(150),
     fecha_alta DATE NOT NULL DEFAULT (CURRENT_DATE),
@@ -35,7 +35,8 @@ CREATE TABLE SOCIO (
     estado ENUM('ACTIVO', 'INACTIVO') DEFAULT 'ACTIVO',
     genero ENUM('MASCULINO', 'FEMENINO'),
     foto_url VARCHAR(500) COMMENT 'URL de la foto del socio en servicio externo',
-    
+    foto_public_id VARCHAR(255) COMMENT 'ID publico de la foto del socio en Cloudinary',
+
     INDEX idx_dni (dni),
     INDEX idx_nombre_apellido (apellido, nombre),
     INDEX idx_estado (estado)

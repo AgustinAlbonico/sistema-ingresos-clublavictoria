@@ -1,25 +1,24 @@
 // Tipos centralizados para el sistema de gestión del club
 
-// Estados de socios
-export type EstadoSocio = 'activo' | 'inactivo';
-
-// Géneros
-export type Genero = 'M' | 'F';
+import { ESTADO_SOCIO, GENERO } from "./constants";
 
 // Interfaz principal de Socio
 export interface Socio {
-  id: string;
+  id?: string;
   dni: string;
   nombre: string;
   apellido: string;
   email: string;
   telefono?: string;
   fechaNacimiento?: string;
-  estado: EstadoSocio;
-  foto?: string;
   fechaIngreso?: string;
-  direccion: string; // Required field
-  genero?: Genero;
+  direccion: string;
+  estado: ESTADO_SOCIO;
+  genero: GENERO;
+}
+
+export interface SocioWithFoto extends Socio {
+  fotoUrl?: string;
 }
 
 // Interfaz de Temporada

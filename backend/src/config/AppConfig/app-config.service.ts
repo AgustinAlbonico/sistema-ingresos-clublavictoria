@@ -11,6 +11,9 @@ enum VariablesEntorno {
   DATABASE_TIMEZONE = 'DATABASE_TIMEZONE',
   JWT_SECRET = 'JWT_SECRET',
   JWT_EXPIRES_IN = 'JWT_EXPIRES_IN',
+  CLOUDINARY_NAME = 'CLOUDINARY_NAME',
+  CLOUDINARY_API_KEY = 'CLOUDINARY_API_KEY',
+  CLOUDINARY_API_SECRET = 'CLOUDINARY_API_SECRET',
 }
 
 @Injectable()
@@ -67,5 +70,18 @@ export class AppConfigService {
     return this.getEnvironmentVariable<string>(
       VariablesEntorno.DATABASE_TIMEZONE,
     );
+  }
+
+  //Variables de entorno Cloudinary
+  getCloudinaryName(): string {
+    return this.getEnvironmentVariable<string>(VariablesEntorno.CLOUDINARY_NAME);
+  }
+
+  getCloudinaryApiKey(): string {
+    return this.getEnvironmentVariable<string>(VariablesEntorno.CLOUDINARY_API_KEY);
+  }
+
+  getCloudinaryApiSecret(): string {
+    return this.getEnvironmentVariable<string>(VariablesEntorno.CLOUDINARY_API_SECRET);
   }
 }

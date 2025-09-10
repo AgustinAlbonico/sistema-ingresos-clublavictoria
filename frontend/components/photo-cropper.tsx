@@ -1,20 +1,12 @@
-"use client";
-
 import { useState, useCallback } from "react";
-import Cropper from "react-easy-crop";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
+import Cropper, { Area } from "react-easy-crop";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 
 async function getCroppedImg(
   imageSrc: string,
-  croppedAreaPixels: { x: number; y: number; width: number; height: number },
-  outputSize = 600 // puedes cambiar a 800 si quieres aún más calidad
+  croppedAreaPixels: Area,
+  outputSize = 600
 ) {
   const image = new Image();
   image.src = imageSrc;
@@ -43,7 +35,7 @@ async function getCroppedImg(
     outputSize
   );
 
-  return canvas.toDataURL("image/png", 1); // calidad máxima 1
+  return canvas.toDataURL("image/png", 1);
 }
 
 export function PhotoCropper({
@@ -57,10 +49,10 @@ export function PhotoCropper({
 }) {
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
-  const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
 
-  const onCropComplete = useCallback((_: any, croppedAreaPixels: any) => {
-    setCroppedAreaPixels(croppedAreaPixels);
+  const onCropComplete = useCallback((_: Area, croppedArea: Area) => {
+    setCroppedAreaPixels(croppedArea);
   }, []);
 
   const handleSave = useCallback(async () => {

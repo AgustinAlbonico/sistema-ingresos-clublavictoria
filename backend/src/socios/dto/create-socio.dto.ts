@@ -1,11 +1,14 @@
-import {
-  IsString,
-  IsNumber,
-  IsDate,
-  IsOptional,
-  IsBoolean,
-} from 'class-validator';
-import { Type } from 'class-transformer';
+import { IsString, IsOptional, IsDateString, IsEmail, IsEnum } from 'class-validator';
+
+export enum Genero {
+  MASCULINO = 'MASCULINO',
+  FEMENINO = 'FEMENINO',
+}
+
+export enum Estado {
+  ACTIVO = 'ACTIVO',
+  INACTIVO = 'INACTIVO',
+}
 
 export class CreateSocioDto {
   @IsString()
@@ -14,25 +17,27 @@ export class CreateSocioDto {
   @IsString()
   apellido: string;
 
-  @IsNumber()
-  dni: number;
-
-  @Type(() => Date)
-  @IsDate()
-  fechaNacimiento: Date;
-
-  @IsString()
-  direccion: string;
-
   @IsString()
   @IsOptional()
+  dni?: string;
+
+  @IsOptional()
+  @IsString()
   telefono?: string;
 
-  @IsString()
   @IsOptional()
   email?: string;
 
-  @IsBoolean()
+  @IsDateString()
+  fechaNacimiento: string;
+
+  @IsString()
   @IsOptional()
-  activo?: boolean;
+  direccion?: string;
+
+  @IsEnum(Estado)
+  estado: Estado;
+
+  @IsEnum(Genero)
+  genero: Genero;
 }

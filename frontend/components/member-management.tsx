@@ -1,11 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useSearch } from "@/hooks/use-search";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import Link from "next/link";
+import Image from "next/image";
+import { toast } from "sonner";
 import {
   Search,
   Plus,
@@ -14,8 +11,14 @@ import {
   User,
   ChevronLeft,
   ChevronRight,
+  Loader2,
 } from "lucide-react";
-import Link from "next/link";
+import { PAGINACION, MENSAJES_EXITO, ESTADO_SOCIO } from "@/lib/constants";
+import { useSocios } from "@/hooks/api/socios/useSocios";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -27,7 +30,6 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { toast } from "sonner";
 import {
   Select,
   SelectContent,
@@ -35,89 +37,33 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
-// Importar tipos y datos centralizados
-import { Socio } from "@/lib/types";
-import { mockSocios } from "@/lib/mock-data";
-import { PAGINACION, MENSAJES_EXITO, ESTADO_SOCIO } from "@/lib/constants";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { useDeleteSocio } from "@/hooks/api/socios/useDeleteSocio";
 
 export function MemberManagement() {
-  const [socios, setSocios] = useState<Socio[]>([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [sociosPorPagina, setSociosPorPagina] = useState<number>(
-    PAGINACION.TAMAÑO_PAGINA_POR_DEFECTO
-  );
-  const [isLoading, setIsLoading] = useState(true);
+  const {
+    data: sociosPaginados,
+    total,
+    page: currentPage,
+    limit: sociosPorPagina,
+    handleLimitChange,
+    searchTerm,
+    setSearch,
+    totalPages,
+    isLoading: isLoadingSocios,
+    prevPage,
+    nextPage,
+    hasNextPage,
+    hasPreviousPage,
+  } = useSocios();
 
-  // Simular carga inicial de datos
-  useEffect(() => {
-    const loadSocios = async () => {
-      try {
-        // Simular delay de API
-        await new Promise((resolve) => setTimeout(resolve, 1500));
-        setSocios(mockSocios);
-      } catch (error) {
-        console.error("Error loading socios:", error);
-        toast.error("Error al cargar socios");
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  const { mutate: deleteSocio, isPending: isLoadingDelete } = useDeleteSocio();
 
-    loadSocios();
-  }, []);
+  const handleDeleteSocio = (id: string) => {
+    deleteSocio(id);
+  };
 
-  // Hook de búsqueda con debounce
-  const { searchTerm, handleSearchChange, clearSearch } = useSearch({
-    onSearch: async (query) => {
-      console.log("Searching socios for:", query);
-      setCurrentPage(1);
-    },
-  });
-
-  // Filter socios based on search term
-  const sociosFiltrados = socios
-    .filter(
-      (socio) =>
-        `${socio.nombre} ${socio.apellido}`
-          .toLowerCase()
-          .includes(searchTerm.toLowerCase()) ||
-        socio.dni.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        socio.email.toLowerCase().includes(searchTerm.toLowerCase())
-    )
-    .sort((a, b) =>
-      `${a.apellido}, ${a.nombre}`.localeCompare(
-        `${b.apellido}, ${b.nombre}`
-      )
-    );
-
-  const totalPages = Math.ceil(sociosFiltrados.length / sociosPorPagina);
   const startIndex = (currentPage - 1) * sociosPorPagina;
-  const sociosPaginados = sociosFiltrados.slice(
-    startIndex,
-    startIndex + sociosPorPagina
-  );
-
-
-  // TODO: Cuando se implemente la API, esta función debería hacer una llamada DELETE
-  const handleDeleteSocio = async (idSocio: string) => {
-    try {
-      setSocios(socios.filter((socio) => socio.id !== idSocio));
-      toast.success(MENSAJES_EXITO.SOCIO_ELIMINADO, {
-        position: "top-center",
-        duration: 3000,
-      });
-    } catch (error) {
-      console.error("Error deleting socio:", error);
-      toast.error("Error al eliminar socio");
-    }
-  };
-
-  const handleSociosPorPaginaChange = (value: string) => {
-    setSociosPorPagina(parseInt(value));
-    setCurrentPage(1);
-  };
 
   return (
     <div className="space-y-6">
@@ -131,11 +77,11 @@ export function MemberManagement() {
         <CardContent>
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4 " />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
               <Input
-                placeholder="Buscar por nombre, DNI o email..."
+                placeholder="Buscar por nombre, apellido, DNI o email..."
                 value={searchTerm}
-                onChange={(e) => handleSearchChange(e.target.value)}
+                onChange={(e) => setSearch(e.target.value)}
                 className="pl-10 rounded-lg border-border focus:ring-primary focus:border-primary text-sm"
               />
             </div>
@@ -143,7 +89,7 @@ export function MemberManagement() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={clearSearch}
+                onClick={() => setSearch("")}
                 className="whitespace-nowrap"
               >
                 Limpiar
@@ -164,7 +110,7 @@ export function MemberManagement() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="text-lg text-foreground">
-              Lista de Socios ({sociosFiltrados.length})
+              Lista de Socios ({total})
             </CardTitle>
             {totalPages > 1 && (
               <p className="text-sm text-muted-foreground">
@@ -175,7 +121,7 @@ export function MemberManagement() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {isLoading ? (
+            {isLoadingSocios ? (
               <div className="text-center py-12">
                 <LoadingSpinner size="lg" />
                 <p className="mt-4 text-sm text-muted-foreground">
@@ -198,14 +144,16 @@ export function MemberManagement() {
                   className="flex flex-col sm:flex-row gap-3 sm:gap-4 sm:items-center sm:justify-between p-4 border border-border rounded-lg hover:bg-muted/50 transition-colors"
                 >
                   {/* Socio Info Section */}
-                  <div className="flex justify-center sm:items-start gap-3 flex-1 min-w-0 ">
-                    {/* Avatar - visible on mobile too but smaller */}
-                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-muted rounded-full flex items-center justify-center flex-shrink-0 sm:my-auto ">
-                      {socio.foto ? (
-                        <img
-                          src={socio.foto || "/placeholder.svg"}
-                          alt={`${socio.nombre} ${socio.apellido}`}
-                          className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover"
+                  <div className="flex justify-center sm:items-start gap-3 flex-1 min-w-0">
+                    {/* Avatar */}
+                    <div className="w-10 h-10 sm:w-16 sm:h-16 bg-muted rounded-full flex items-center justify-center flex-shrink-0 sm:my-auto">
+                      {socio.fotoUrl ? (
+                        <Image
+                          src={socio.fotoUrl}
+                          alt={socio.nombre}
+                          width={64}
+                          height={64}
+                          className="w-10 h-10 sm:w-16 sm:h-16 rounded-full object-cover"
                         />
                       ) : (
                         <User className="h-5 w-5 sm:h-6 sm:w-6 text-muted-foreground" />
@@ -215,7 +163,7 @@ export function MemberManagement() {
                     {/* Socio Details */}
                     <div className="flex-1 min-w-0">
                       <h3 className="font-semibold text-foreground text-base sm:text-lg truncate">
-                        {socio.apellido}, {socio.nombre}
+                        {`${socio.nombre}, ${socio.apellido}`}
                       </h3>
                       <div className="space-y-1">
                         <p className="text-sm text-muted-foreground">
@@ -224,11 +172,6 @@ export function MemberManagement() {
                         <p className="text-sm text-muted-foreground truncate">
                           {socio.email}
                         </p>
-                        {socio.telefono && (
-                          <p className="text-sm text-muted-foreground">
-                            {socio.telefono}
-                          </p>
-                        )}
                       </div>
                     </div>
                   </div>
@@ -281,7 +224,7 @@ export function MemberManagement() {
                             </AlertDialogTitle>
                             <AlertDialogDescription>
                               Esta acción no se puede deshacer. Se eliminará
-                              permanentemente el socio {socio.nombre}{" "}
+                              permanentemente el socio {socio.nombre},{" "}
                               {socio.apellido} del sistema.
                             </AlertDialogDescription>
                           </AlertDialogHeader>
@@ -292,8 +235,12 @@ export function MemberManagement() {
                             <AlertDialogAction
                               onClick={() => handleDeleteSocio(socio.id)}
                               className="bg-destructive hover:bg-destructive/90 text-destructive-foreground w-full sm:w-auto"
+                              disabled={isLoadingDelete}  
                             >
                               Eliminar
+                              {isLoadingDelete && (
+                                <Loader2 className="ml-2 h-4 w-4 animate-spin" />
+                              )}
                             </AlertDialogAction>
                           </AlertDialogFooter>
                         </AlertDialogContent>
@@ -305,12 +252,11 @@ export function MemberManagement() {
             )}
           </div>
 
-          {/* Pagination Controls - Always show to keep items per page selector visible */}
+          {/* Pagination Controls */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between mt-6 pt-4 border-t border-border gap-3">
             <p className="text-sm text-muted-foreground text-center sm:text-left">
               Mostrando {startIndex + 1} a{" "}
-              {Math.min(startIndex + sociosPorPagina, sociosFiltrados.length)} de{" "}
-              {sociosFiltrados.length} socios
+              {Math.min(startIndex + sociosPorPagina, total)} de {total} socios
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center sm:justify-end gap-2">
               {totalPages > 1 && (
@@ -318,8 +264,8 @@ export function MemberManagement() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setCurrentPage(currentPage - 1)}
-                    disabled={currentPage === 1}
+                    onClick={prevPage}
+                    disabled={!hasPreviousPage}
                     className="flex-shrink-0"
                   >
                     <ChevronLeft className="h-4 w-4" />
@@ -331,8 +277,8 @@ export function MemberManagement() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setCurrentPage(currentPage + 1)}
-                    disabled={currentPage === totalPages}
+                    onClick={nextPage}
+                    disabled={!hasNextPage}
                     className="flex-shrink-0"
                   >
                     <span className="hidden xs:inline mr-1">Siguiente</span>
@@ -346,7 +292,7 @@ export function MemberManagement() {
                 </span>
                 <Select
                   value={sociosPorPagina.toString()}
-                  onValueChange={handleSociosPorPaginaChange}
+                  onValueChange={(value) => handleLimitChange(parseInt(value))}
                 >
                   <SelectTrigger className="w-20 h-8 text-xs">
                     <SelectValue />

@@ -4,82 +4,91 @@ import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowLeft, Upload, X } from "lucide-react";
+import { ArrowLeft, Upload, X, Save } from "lucide-react";
 import Link from "next/link";
 import { PhotoCropper } from "@/components/photo-cropper";
 import { toast } from "sonner";
 import { MemberForm } from "@/components/member-form";
-import { Socio } from "@/lib/types";
-
-// Mock: en un caso real irías a la API/DB
-const mockSocio: Socio = {
-  id: "1",
-  dni: "12345678",
-  nombre: "Carlos",
-  apellido: "Pérez",
-  direccion: "Av. Siempre Viva 742",
-  email: "carlos@email.com",
-  telefono: "1122334455",
-  fechaNacimiento: "1990-05-15",
-  genero: "M",
-  estado: "activo",
-  foto: "https://media.istockphoto.com/id/1090878494/es/foto/retrato-de-joven-sonriente-a-hombre-guapo-en-camiseta-polo-azul-aislado-sobre-fondo-gris-de.jpg?s=2048x2048&w=is&k=20&c=UTeB9pQD83M3ZkbZF1G48vOkjNm6uYUaizx2XBCPszM=",
-};
+import { SocioWithFoto } from "@/lib/types";
+import { useSocioById } from "@/hooks/api/socios/useSocios";
+import { AxiosError } from "axios";
+import { useUpdateSocio } from "@/hooks/api/socios/useUpdateSocio";
+import apiClient from "@/lib/api/client";
 
 export default function EditMemberPage() {
   const router = useRouter();
   const { id } = useParams();
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const [photo, setPhoto] = useState<File | null>(null);
-  const [photoError, setPhotoError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [photoError, setPhotoError] = useState<string | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
   const [cropSrc, setCropSrc] = useState<string | null>(null);
 
-  // Cargar datos del socio al montar el componente
+  const { data: socio } = useSocioById(parseInt(id as string));
+  const { mutate: updateSocio, isPending: isLoadingUpdate } = useUpdateSocio();
+
+  // Cargar foto inicial de Cloudinary si existe
   useEffect(() => {
-    // Simulamos la carga de datos del socio
-    if (mockSocio.foto) {
-      setPhotoPreview(mockSocio.foto);
+    if (socio?.fotoUrl) {
+      setPhotoPreview(socio.fotoUrl);
     }
-  }, [id]);
+  }, [socio]);
 
-  const handleUpdateSocio = async (formData: Omit<Socio, "id">) => {
+  const handleUpdateSocio = async (formData: Omit<SocioWithFoto, "id">) => {
+    const formDataToSend = new FormData();
+
+    // Add all form fields except 'foto'
+    Object.entries(formData).forEach(([key, value]) => {
+      if (
+        value !== null &&
+        value !== undefined &&
+        key !== "foto" &&
+        key !== "fotoUrl"
+      ) {
+        formDataToSend.append(key, value);
+      }
+    });
+
+    if (photoPreview) {
+      const photoFile = dataURLtoFile(
+        photoPreview,
+        `${formData.nombre}-${formData.apellido}-FOTO-PERFIL.jpg`
+      );
+      formDataToSend.append("foto", photoFile);
+    } else if (socio?.fotoUrl) {
+      formDataToSend.append("fotoUrl", socio!.fotoUrl);
+    }
+
+    console.log(Object.fromEntries(formDataToSend.entries()));
+
     try {
-      setIsSubmitting(true);
-      console.log("Actualizando socio:", { ...formData, foto: photoPreview });
-
-      // Aquí iría la llamada a la API para actualizar
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      // Mostrar toast de éxito
-      toast.success("El socio se ha actualizado correctamente.");
-
-      // Redirigir después de actualizar el socio
+      // await updateSocio({id: parseInt(id as string), data: formDataToSend});
+      await apiClient.put(`/socios/${id}`, formDataToSend);
       router.push("/socios");
     } catch (error) {
-      console.error("Error al actualizar socio:", error);
-      // Mostrar toast de error
-      toast.error(
-        "No se pudo actualizar el socio. Por favor, intente nuevamente."
-      );
-    } finally {
-      setIsSubmitting(false);
+      console.error(error);
     }
+  };
+
+  // Convertir Data URL a File
+  const dataURLtoFile = (dataUrl: string, filename: string) => {
+    const arr = dataUrl.split(",");
+    const mime = arr[0].match(/:(.*?);/)![1];
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    while (n--) u8arr[n] = bstr.charCodeAt(n);
+    return new File([u8arr], filename, { type: mime });
   };
 
   const handleFileSelect = (file: File) => {
     if (file.type.startsWith("image/")) {
-      setPhoto(file);
       setPhotoError(null);
       const reader = new FileReader();
-      reader.onload = (e) => {
-        setCropSrc(e.target?.result as string);
-      };
+      reader.onload = (e) => setCropSrc(e.target?.result as string);
       reader.readAsDataURL(file);
     } else {
-      setPhoto(null);
       setPhotoPreview(null);
       setPhotoError("El archivo debe ser una imagen (jpg, png, etc.)");
     }
@@ -89,22 +98,15 @@ export default function EditMemberPage() {
     e.preventDefault();
     setIsDragOver(false);
     const files = Array.from(e.dataTransfer.files);
-    if (files.length > 0) {
-      handleFileSelect(files[0]);
-    }
+    if (files.length > 0) handleFileSelect(files[0]);
   };
 
   const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
-    if (files && files.length > 0) {
-      handleFileSelect(files[0]);
-    }
+    if (files && files.length > 0) handleFileSelect(files[0]);
   };
 
-  const removePhoto = () => {
-    setPhoto(null);
-    setPhotoPreview(null);
-  };
+  const removePhoto = () => setPhotoPreview(null);
 
   return (
     <div className="min-h-screen flex items-center">
@@ -113,8 +115,7 @@ export default function EditMemberPage() {
           <div className="grid sm:grid-cols-3 grid-cols-2 justify-between items-center gap-4 mb-6 px-6">
             <Link href="/socios">
               <Button variant="outline" size="sm">
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Volver
+                <ArrowLeft className="h-4 w-4 mr-2" /> Volver
               </Button>
             </Link>
             <h1 className="text-2xl font-bold text-foreground text-center">
@@ -185,7 +186,7 @@ export default function EditMemberPage() {
 
             {/* Member Form */}
             <MemberForm
-              socio={mockSocio}
+              socio={socio}
               onSubmit={handleUpdateSocio}
               onCancel={() => router.push("/socios")}
               isSubmitting={isSubmitting}

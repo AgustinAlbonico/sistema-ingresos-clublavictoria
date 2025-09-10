@@ -20,34 +20,34 @@ export class Socio {
   @Index()
   apellido: string;
 
-  @Column({ length: 20, unique: true })
+  @Column({ length: 20, unique: true, nullable: true })
   @Index()
-  dni: string;
+  dni?: string;
 
   @Column({ length: 20, nullable: true })
-  telefono: string;
+  telefono?: string;
 
   @Column({ length: 150, nullable: true })
-  email: string;
+  email?: string;
 
-  @Column({ type: 'date', default: () => 'CURRENT_DATE' })
-  fecha_alta: Date;
+  @Column({ type: 'date', default: () => 'CURRENT_DATE', name: "fecha_alta" })
+  fechaAlta: string;
 
-  @Column({ type: 'date' })
-  fecha_nacimiento: Date;
+  @Column({ type: 'date', name: "fecha_nacimiento"})
+  fechaNacimiento: string;
 
   @Column({ length: 255, nullable: true })
-  direccion: string;
+  direccion?: string;
 
   @Column({ type: 'enum', enum: ['ACTIVO', 'INACTIVO'], default: 'ACTIVO' })
   @Index()
   estado: string;
 
-  @Column({ type: 'enum', enum: ['MASCULINO', 'FEMENINO'], nullable: true })
+  @Column({ type: 'enum', enum: ['MASCULINO', 'FEMENINO'] })
   genero: string;
 
-  @Column({ length: 500, nullable: true })
-  foto_url: string;
+  @Column({ length: 500, nullable: true, name: "foto_url" })
+  fotoUrl?: string;
 
   @OneToMany(() => SocioTemporada, (st) => st.socio)
   temporadas: SocioTemporada[];

@@ -2,52 +2,65 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Upload, X } from "lucide-react";
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { ArrowLeft, Upload, X } from "lucide-react";
 import { PhotoCropper } from "@/components/photo-cropper";
-import { toast } from "sonner";
 import { MemberForm } from "@/components/member-form";
 import { Socio } from "@/lib/types";
+import { useCreateSocio } from "@/hooks/api/socios/useCreateSocio";
 
 export default function CreateMemberPage() {
   const router = useRouter();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  const [photo, setPhoto] = useState<File | null>(null);
+
   const [photoError, setPhotoError] = useState<string | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
   const [cropSrc, setCropSrc] = useState<string | null>(null);
 
-  const handleCreateSocio = async (formData: Omit<Socio, 'id'>) => {
-    try {
-      setIsSubmitting(true);
-      console.log("Creando socio:", { ...formData, foto: photoPreview });
+  const { mutateAsync: createSocio, isPending: isSubmitting } =
+    useCreateSocio();
 
-      console.log('tipo de foto: ' + typeof photoPreview)
-      
-      // Aquí iría la llamada a la API
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Mostrar toast de éxito con Sonner
-      toast.success("El socio se ha creado correctamente.");
-      
-      // Redirigir después de crear el socio
-      router.push("/socios");
+  const handleCreateSocio = async (formData: Omit<Socio, "id">) => {
+    const formDataToSend = new FormData();
+
+    // Add all form fields except 'foto'
+    Object.entries(formData).forEach(([key, value]) => {
+      if (value !== null && value !== undefined && key !== "foto") {
+        formDataToSend.append(key, value);
+      }
+    });
+
+    // Add the photo if it exists
+    if (photoPreview) {
+      const photoFile = dataURLtoFile(
+        photoPreview,
+        `${formData.nombre}-${formData.apellido}-FOTO-PERFIL.jpg`
+      );
+      formDataToSend.append("foto", photoFile);
+    }
+    try {
+      await createSocio(formDataToSend); // <-- aquí sí se puede await
+      router.push("/socios"); // redirige después de éxito
     } catch (error) {
-      console.error("Error al crear socio:", error);
-      // Mostrar toast de error con Sonner
-      toast.error("No se pudo crear el socio. Por favor, intente nuevamente.");
-    } finally {
-      setIsSubmitting(false);
+      console.error(error); // ya se mostró toast dentro del hook
     }
   };
 
+  // Convertir Data URL a File
+  function dataURLtoFile(dataUrl: string, filename: string) {
+    const arr = dataUrl.split(",");
+    const mime = arr[0].match(/:(.*?);/)![1];
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    while (n--) u8arr[n] = bstr.charCodeAt(n);
+    return new File([u8arr], filename, { type: mime });
+  }
+
   const handleFileSelect = (file: File) => {
     if (file.type.startsWith("image/")) {
-      setPhoto(file);
       setPhotoError(null);
       const reader = new FileReader();
       reader.onload = (e) => {
@@ -55,7 +68,6 @@ export default function CreateMemberPage() {
       };
       reader.readAsDataURL(file);
     } else {
-      setPhoto(null);
       setPhotoPreview(null);
       setPhotoError("El archivo debe ser una imagen (jpg, png, etc.)");
     }
@@ -78,7 +90,6 @@ export default function CreateMemberPage() {
   };
 
   const removePhoto = () => {
-    setPhoto(null);
     setPhotoPreview(null);
   };
 

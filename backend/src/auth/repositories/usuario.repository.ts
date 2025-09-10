@@ -1,17 +1,15 @@
 import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
 import { Usuario } from '../entities/usuario.entity';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 
 @Injectable()
-export class UsuarioRepository {
-  constructor(
-    @InjectRepository(Usuario)
-    private readonly usuarioRepository: Repository<Usuario>,
-  ) {}
+export class UsuarioRepository extends Repository<Usuario> {
+  constructor(private dataSource: DataSource) {
+    super(Usuario, dataSource.createEntityManager());
+  }
 
   async findByUsername(username: string) {
-    return await this.usuarioRepository.findOne({
+    return await this.findOne({
       where: { usuario: username },
     });
   }
