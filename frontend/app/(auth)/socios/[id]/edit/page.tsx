@@ -38,30 +38,45 @@ export default function EditMemberPage() {
   const handleUpdateSocio = async (formData: Omit<SocioWithFoto, "id">) => {
     const formDataToSend = new FormData();
 
-    // Add all form fields except 'foto'
-    Object.entries(formData).forEach(([key, value]) => {
-      if (
-        value !== null &&
-        value !== undefined &&
-        key !== "foto" &&
-        key !== "fotoUrl"
-      ) {
-        formDataToSend.append(key, value);
-      }
-    });
+   // Campos comunes (excepto foto/fotoUrl/fotoUrlVieja/eliminarFoto)
+   Object.entries(formData).forEach(([key, value]) => {
+    if (
+      value !== null &&
+      value !== undefined &&
+      key !== "foto" &&
+      key !== "fotoUrl" &&
+      key !== "fotoUrlVieja" &&
+      key !== "eliminarFoto"
+    ) {
+      formDataToSend.append(key, value as any);
+    }
+  });
 
-    if (photoPreview) {
+  const teniaFoto = Boolean(socio?.fotoUrl);
+  const isDataUrl = (v?: string) => !!v && v.startsWith("data:");
+
+  if (photoPreview) {
+    if (isDataUrl(photoPreview)) {
+      // 👉 Nueva foto: la subimos
       const photoFile = dataURLtoFile(
         photoPreview,
         `${formData.nombre}-${formData.apellido}-FOTO-PERFIL.jpg`
       );
       formDataToSend.append("foto", photoFile);
-    } else if (socio?.fotoUrl) {
-      formDataToSend.append("fotoUrl", socio!.fotoUrl);
+
+      if (socio?.fotoUrl) {
+        // 👉 Le digo al backend cuál era la anterior para borrarla
+        formDataToSend.append("fotoUrlVieja", socio.fotoUrl);
+      }
     }
-
-    console.log(Object.fromEntries(formDataToSend.entries()));
-
+    // Si es una URL igual a la existente, no mandamos nada de foto
+  } else {
+    if (teniaFoto) {
+      // 👉 El usuario borró la foto
+      formDataToSend.append("eliminarFoto", "true");
+    }
+  }
+  console.log("FormData:", Object.fromEntries(formDataToSend.entries()));
     try {
       // await updateSocio({id: parseInt(id as string), data: formDataToSend});
       await apiClient.put(`/socios/${id}`, formDataToSend);
@@ -70,6 +85,8 @@ export default function EditMemberPage() {
       console.error(error);
     }
   };
+
+  
 
   // Convertir Data URL a File
   const dataURLtoFile = (dataUrl: string, filename: string) => {

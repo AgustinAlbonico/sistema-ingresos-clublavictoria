@@ -234,7 +234,7 @@ export function MemberManagement() {
                             </AlertDialogCancel>
                             <AlertDialogAction
                               onClick={() => handleDeleteSocio(socio.id)}
-                              className="bg-destructive hover:bg-destructive/90 text-destructive-foreground w-full sm:w-auto"
+                              className="bg-destructive hover:bg-destructive/85 text-destructive-foreground w-full sm:w-auto"
                               disabled={isLoadingDelete}  
                             >
                               Eliminar

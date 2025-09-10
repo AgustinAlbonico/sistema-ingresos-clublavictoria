@@ -8,6 +8,7 @@ import { PaginationDto } from 'src/common/dto/pagination.dto';
 import { CreateSocioDto } from './dto/create-socio.dto';
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 import { CustomError } from 'src/constants/errors/custom-error';
+import { UpdateSocioDto } from './dto/update-socio.dto';
 
 @Injectable()
 export class SociosService {
@@ -28,10 +29,6 @@ export class SociosService {
       }
     }
 
-    const fechaAlta = new Date().toLocaleDateString('sv-SE', {
-      timeZone: 'America/Argentina/Buenos_Aires',
-    });
-
     if (file) {
       try {
         const uploadFile = await this.cloudinaryService.uploadFile(file);
@@ -42,10 +39,12 @@ export class SociosService {
       }
     }
 
+    const fechaAlta = new Date().toLocaleDateString();
+
     const socioData = {
       ...createSocioDto,
-      fechaAlta,
       fotoUrl,
+      fechaAlta,
     };
 
     try {
@@ -57,42 +56,49 @@ export class SociosService {
     }
   }
 
-  async update(id: number, updateSocioDto: CreateSocioDto, file?: Express.Multer.File) {
+  async update(
+    id: number,
+    updateSocioDto: CreateSocioDto,
+    file?: Express.Multer.File,
+  ) {
     try {
-        // 1. First check if socio exists
-        const existingSocio = await this.socioRepository.findOne({ where: { id } });
-        if (!existingSocio) {
-            throw new CustomError('Socio no encontrado', 404);
+      // 1. First check if socio exists
+      const existingSocio = await this.socioRepository.findOne({
+        where: { id },
+      });
+      if (!existingSocio) {
+        throw new CustomError('Socio no encontrado', 404);
+      }
+
+      // 2. Handle file upload if exists
+      let fotoUrl = existingSocio.fotoUrl;
+
+      if (file) {
+        try {
+          const uploadFile = await this.cloudinaryService.uploadFile(file);
+          fotoUrl = uploadFile.secure_url;
+          // Delete old photo if it exists
+          if (existingSocio.fotoUrl) {
+            await this.cloudinaryService.deleteFile(existingSocio.fotoUrl);
+          }
+        } catch (error) {
+          console.error('Error uploading file:', error);
+          throw new CustomError('Error al subir la foto del socio');
         }
+      }
 
-        // 2. Handle file upload if exists
-        let fotoUrl = existingSocio.fotoUrl;
-
-        if (file) {
-            try {
-                const uploadFile = await this.cloudinaryService.uploadFile(file);
-                fotoUrl = uploadFile.secure_url;
-                // Delete old photo if it exists
-                if (existingSocio.fotoUrl) {
-                    await this.cloudinaryService.deleteFile(existingSocio.fotoUrl);
-                }
-            } catch (error) {
-                console.error('Error uploading file:', error);
-                throw new CustomError('Error al subir la foto del socio');
-            }
-        }
-
-        // 3. Update the socio
-        return await this.socioRepository.updateSocio(existingSocio, {
-            ...updateSocioDto,
-            ...(fotoUrl && { fotoUrl })
-        });
-
+      // 3. Update the socio
+      return await this.socioRepository.updateSocio(existingSocio, {
+        ...updateSocioDto,
+        ...(fotoUrl && { fotoUrl }),
+      });
     } catch (error) {
-        console.error('Error updating socio:', error);
-        throw error instanceof CustomError ? error : new CustomError('Error al actualizar el socio');
+      console.error('Error updating socio:', error);
+      throw error instanceof CustomError
+        ? error
+        : new CustomError('Error al actualizar el socio');
     }
-}
+  }
 
   async findAll(paginationDto: PaginationDto) {
     try {
