@@ -23,11 +23,10 @@ export interface SocioWithFoto extends Socio {
 
 // Interfaz de Temporada
 export interface Temporada {
-  id: string;
+  id?: string;
   nombre: string;
   fechaInicio: string;
   fechaFin: string;
-  estado: 'activa' | 'inactiva' | 'proxima' | 'finalizada';
   descripcion?: string;
 }
 

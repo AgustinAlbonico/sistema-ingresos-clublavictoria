@@ -28,9 +28,13 @@ export class SociosService {
         throw new CustomError('El DNI ya se encuentra registrado');
       }
     }
+    const fechaAlta = new Date().toLocaleDateString('en-CA', {
+      timeZone: 'America/Argentina/Buenos_Aires',
+    });
 
     if (file) {
       try {
+        console.log('file');
         const uploadFile = await this.cloudinaryService.uploadFile(file);
         fotoUrl = uploadFile.secure_url;
       } catch (error) {
@@ -38,9 +42,6 @@ export class SociosService {
         throw new BadRequestException('Error al subir la foto del socio ');
       }
     }
-
-    const fechaAlta = new Date().toLocaleDateString();
-
     const socioData = {
       ...createSocioDto,
       fotoUrl,
@@ -52,52 +53,40 @@ export class SociosService {
       return socio;
     } catch (error) {
       console.log(error);
+      if (fotoUrl) {
+        console.log('Eliminando la foto del socio de cloudinary');
+        await this.cloudinaryService.deleteFile(fotoUrl);
+      }
       throw new CustomError('Error guardando el socio');
     }
   }
 
-  async update(
-    id: number,
-    updateSocioDto: CreateSocioDto,
-    file?: Express.Multer.File,
-  ) {
-    try {
-      // 1. First check if socio exists
-      const existingSocio = await this.socioRepository.findOne({
-        where: { id },
-      });
-      if (!existingSocio) {
-        throw new CustomError('Socio no encontrado', 404);
+  async update(id: number, dto: UpdateSocioDto, file?: Express.Multer.File) {
+    const socio = await this.socioRepository.findOne({ where: { id } });
+    if (!socio) throw new NotFoundException('Socio no encontrado');
+
+    // 👉 Si llega archivo, lo subimos
+    if (file) {
+      if (dto.eliminarFotoVieja && dto.fotoUrl) {
+        await this.cloudinaryService.deleteFile(dto.fotoUrl);
       }
 
-      // 2. Handle file upload if exists
-      let fotoUrl = existingSocio.fotoUrl;
-
-      if (file) {
-        try {
-          const uploadFile = await this.cloudinaryService.uploadFile(file);
-          fotoUrl = uploadFile.secure_url;
-          // Delete old photo if it exists
-          if (existingSocio.fotoUrl) {
-            await this.cloudinaryService.deleteFile(existingSocio.fotoUrl);
-          }
-        } catch (error) {
-          console.error('Error uploading file:', error);
-          throw new CustomError('Error al subir la foto del socio');
-        }
-      }
-
-      // 3. Update the socio
-      return await this.socioRepository.updateSocio(existingSocio, {
-        ...updateSocioDto,
-        ...(fotoUrl && { fotoUrl }),
-      });
-    } catch (error) {
-      console.error('Error updating socio:', error);
-      throw error instanceof CustomError
-        ? error
-        : new CustomError('Error al actualizar el socio');
+      const uploaded = await this.cloudinaryService.uploadFile(file);
+      socio.fotoUrl = uploaded.secure_url;
+    } else if (dto.eliminarFotoVieja && dto.fotoUrl) {
+      console.log('Eliminando la foto del socio de cloudinary');
+      await this.cloudinaryService.deleteFile(dto.fotoUrl);
+      socio.fotoUrl = "";
     }
+
+    // 👉 Sacamos lo que no queremos pisar
+    const { fotoUrl, eliminarFotoVieja, fechaAlta, ...rest } = dto;
+
+
+    Object.assign(socio, rest);
+
+
+    return this.socioRepository.save(socio);
   }
 
   async findAll(paginationDto: PaginationDto) {
@@ -129,6 +118,10 @@ export class SociosService {
 
   async remove(id: number) {
     try {
+      const socio = await this.findOne(id);
+      if (socio.fotoUrl) {
+        await this.cloudinaryService.deleteFile(socio.fotoUrl);
+      }
       const result = await this.socioRepository.delete(id);
       if (result.affected === 0) {
         throw new NotFoundException(`Socio with ID ${id} not found`);

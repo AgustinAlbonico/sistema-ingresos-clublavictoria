@@ -1,9 +1,8 @@
 // hooks/useSocios.ts
 import { useQuery } from "@tanstack/react-query";
-import { usePaginatedSearchQuery } from "../usePaginatedSearchQuery";
+import { usePaginatedSearchQuery } from "../common/usePaginatedSearchQuery";
 import { SocioWithFoto } from "@/lib/types";
 import apiClient from "@/lib/api/client";
-import { STALE_TIME } from "@/lib/constants";
 
 // export interface Socio {
 //   id: number;

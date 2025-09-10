@@ -26,7 +26,7 @@ export default function EditMemberPage() {
   const [cropSrc, setCropSrc] = useState<string | null>(null);
 
   const { data: socio } = useSocioById(parseInt(id as string));
-  const { mutate: updateSocio, isPending: isLoadingUpdate } = useUpdateSocio();
+  const { mutateAsync: updateSocio, isPending: isLoadingUpdate } = useUpdateSocio();
 
   // Cargar foto inicial de Cloudinary si existe
   useEffect(() => {
@@ -37,55 +37,55 @@ export default function EditMemberPage() {
 
   const handleUpdateSocio = async (formData: Omit<SocioWithFoto, "id">) => {
     const formDataToSend = new FormData();
-
-   // Campos comunes (excepto foto/fotoUrl/fotoUrlVieja/eliminarFoto)
-   Object.entries(formData).forEach(([key, value]) => {
-    if (
-      value !== null &&
-      value !== undefined &&
-      key !== "foto" &&
-      key !== "fotoUrl" &&
-      key !== "fotoUrlVieja" &&
-      key !== "eliminarFoto"
-    ) {
-      formDataToSend.append(key, value as any);
-    }
-  });
-
-  const teniaFoto = Boolean(socio?.fotoUrl);
-  const isDataUrl = (v?: string) => !!v && v.startsWith("data:");
-
-  if (photoPreview) {
-    if (isDataUrl(photoPreview)) {
-      // 👉 Nueva foto: la subimos
-      const photoFile = dataURLtoFile(
-        photoPreview,
-        `${formData.nombre}-${formData.apellido}-FOTO-PERFIL.jpg`
-      );
-      formDataToSend.append("foto", photoFile);
-
-      if (socio?.fotoUrl) {
-        // 👉 Le digo al backend cuál era la anterior para borrarla
-        formDataToSend.append("fotoUrlVieja", socio.fotoUrl);
+  
+    // Campos comunes (excepto foto, fotoUrl, eliminarFotoVieja)
+    Object.entries(formData).forEach(([key, value]) => {
+      if (
+        value !== null &&
+        value !== undefined &&
+        key !== "foto" &&
+        key !== "fotoUrl" &&
+        key !== "eliminarFotoVieja"
+      ) {
+        formDataToSend.append(key, value as any);
+      }
+    });
+  
+    const teniaFoto = Boolean(socio?.fotoUrl);
+    const isDataUrl = (v?: string) => !!v && v.startsWith("data:");
+  
+    if (photoPreview) {
+      if (isDataUrl(photoPreview)) {
+        // 👉 Nueva foto: la subimos
+        const photoFile = dataURLtoFile(
+          photoPreview,
+          `${formData.nombre}-${formData.apellido}-FOTO-PERFIL.jpg`
+        );
+        formDataToSend.append("foto", photoFile);
+  
+        if (socio?.fotoUrl) {
+          formDataToSend.append("fotoUrl", socio.fotoUrl);
+          formDataToSend.append("eliminarFotoVieja", "true"); // reemplazo → borro la anterior
+        }
+      }
+      // Si es una URL igual a la existente, no mandamos nada → mantiene foto
+    } else {
+      if (teniaFoto && socio?.fotoUrl) {
+        // 👉 El usuario borró la foto manualmente
+        formDataToSend.append("fotoUrl", socio.fotoUrl);
+        formDataToSend.append("eliminarFotoVieja", "true");
       }
     }
-    // Si es una URL igual a la existente, no mandamos nada de foto
-  } else {
-    if (teniaFoto) {
-      // 👉 El usuario borró la foto
-      formDataToSend.append("eliminarFoto", "true");
-    }
-  }
-  console.log("FormData:", Object.fromEntries(formDataToSend.entries()));
+  
+    console.log("FormData:", Object.fromEntries(formDataToSend.entries()));
+  
     try {
-      // await updateSocio({id: parseInt(id as string), data: formDataToSend});
-      await apiClient.put(`/socios/${id}`, formDataToSend);
+      await updateSocio({id: parseInt(id as string), data: formDataToSend});
       router.push("/socios");
     } catch (error) {
       console.error(error);
     }
   };
-
   
 
   // Convertir Data URL a File

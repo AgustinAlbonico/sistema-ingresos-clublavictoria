@@ -18,7 +18,7 @@ export function LoginForm() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
-  const loginMutation = useLogin();
+  const { mutateAsync: loginMutation, isPending } = useLogin();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,7 +30,7 @@ export function LoginForm() {
     }
 
     try {
-      await loginMutation.mutateAsync({ usuario, password });
+      await loginMutation({ usuario, password });
     } catch (err) {
       if (err instanceof AxiosError) {
         setError(err.response?.data.message);
@@ -60,7 +60,7 @@ export function LoginForm() {
               value={usuario}
               onChange={(e) => setUsuario(e.target.value)}
               required
-              disabled={loginMutation.isPending}
+              disabled={isPending}
               className="rounded-lg border-border focus:ring-primary focus:border-primary"
             />
           </div>
@@ -77,7 +77,7 @@ export function LoginForm() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                disabled={loginMutation.isPending}
+                disabled={isPending}
                 className="rounded-lg border-border focus:ring-primary focus:border-primary pr-10"
               />
               <Button
@@ -105,9 +105,9 @@ export function LoginForm() {
           <Button
             type="submit"
             className="w-full rounded-lg bg-primary hover:bg-primary/85 text-primary-foreground font-medium"
-            disabled={loginMutation.isPending}
+            disabled={isPending}
           >
-            {loginMutation.isPending ? (
+            {isPending ? (
               <div className="flex items-center gap-2">
                 <div className="w-4 h-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
                 Iniciando sesión...

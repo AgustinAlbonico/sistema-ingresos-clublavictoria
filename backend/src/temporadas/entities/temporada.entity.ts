@@ -15,19 +15,19 @@ export class TemporadaPileta {
   @Column({ length: 100 })
   nombre: string;
 
-  @Column({ type: 'date' })
+  @Column({ type: 'date', name: "fecha_inicio" })
   @Index()
-  fecha_inicio: Date;
+  fechaInicio: string;
 
-  @Column({ type: 'date' })
+  @Column({ type: 'date', name: "fecha_fin" })
   @Index()
-  fecha_fin: Date;
+  fechaFin: string;
 
   @Column({ length: 100, nullable: true })
   descripcion: string;
 
-  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
-  created_at: Date;
+  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP', name: "created_at" })
+  createdAt: Date;
 
   @OneToMany(() => SocioTemporada, (st) => st.temporada)
   socios: SocioTemporada[];

@@ -25,68 +25,70 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { Temporada } from "@/lib/types";
-import { getMockTemporadas } from "@/lib/mock-data";
-import { useEffect } from "react";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { useTemporadas } from "@/hooks/api/temporadas/useTemporadas";
+import { useCreateTemporada } from "@/hooks/api/temporadas/useCreateTemporada";
+import { useUpdateTemporada } from "@/hooks/api/temporadas/useUpdateTemporada";
+import { useDeleteTemporada } from "@/hooks/api/temporadas/useDeleteTemporada";
 
 export function SeasonManagement() {
-  const [temporadas, setTemporadas] = useState<Temporada[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { data: temporadas, isLoading } = useTemporadas();
+  const { mutateAsync: createTemporada, isPending: isPendingCreate } = useCreateTemporada();
+  const { mutateAsync: updateTemporada, isPending: isPendingUpdate } = useUpdateTemporada();
+  const { mutateAsync: deleteTemporada, isPending: isPendingDelete } = useDeleteTemporada();
+
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [editingTemporada, setEditingTemporada] = useState<Temporada | null>(null);
+  const [editingTemporada, setEditingTemporada] = useState<Temporada | null>(
+    null
+  );
 
-  // Simular carga inicial de datos (llamada a API)
-  useEffect(() => {
-    setIsLoading(true);
-    const loadTemporadas = async () => {
-      await new Promise((resolve) => setTimeout(resolve, 1200)); // Simula delay de API
-      setTemporadas(getMockTemporadas());
-      setIsLoading(false);
-    };
-    loadTemporadas();
-  }, []);
-
-  const handleCrearTemporada = (datosTemporada: Omit<Temporada, 'id'>) => {
-    const nuevaTemporada: Temporada = {
-      ...datosTemporada,
-      id: Date.now().toString(),
-      // Asegurar que las fechas se guarden correctamente
-      fechaInicio: datosTemporada.fechaInicio.split('T')[0],
-      fechaFin: datosTemporada.fechaFin.split('T')[0],
-    };
-    setTemporadas([...temporadas, nuevaTemporada]);
-    setIsCreateDialogOpen(false);
-    toast.success("Temporada creada exitosamente");
-  };
-
-  const handleEditarTemporada = (datosTemporada: Omit<Temporada, 'id'>) => {
-    if (editingTemporada) {
-      setTemporadas(
-        temporadas.map((temporada) =>
-          temporada.id === editingTemporada.id
-            ? { 
-                ...datosTemporada, 
-                id: editingTemporada.id,
-                // Asegurar que las fechas se guarden correctamente
-                fechaInicio: datosTemporada.fechaInicio.split('T')[0],
-                fechaFin: datosTemporada.fechaFin.split('T')[0],
-              }
-            : temporada
-        )
-      );
-      setEditingTemporada(null);
-      toast.success("Temporada actualizada exitosamente");
+  const handleCrearTemporada = async (formData: Omit<Temporada, "id">) => {
+    
+    const temporada = {
+      nombre: formData.nombre,
+      fechaInicio: formData.fechaInicio,
+      fechaFin: formData.fechaFin,
+      descripcion: formData.descripcion,
+    }
+    
+    try {
+      await createTemporada(temporada);
+      setIsCreateDialogOpen(false);
+    } catch (error) {
+      console.error(error);
     }
   };
 
-  const handleEliminarTemporada = (idTemporada: string) => {
-    setTemporadas(temporadas.filter((temporada) => temporada.id !== idTemporada));
-    toast.success("Temporada eliminada exitosamente");
+  const handleEditarTemporada = async (formData: Omit<Temporada, "id">) => {
+    const temporada = {
+      nombre: formData.nombre,
+      fechaInicio: formData.fechaInicio,
+      fechaFin: formData.fechaFin,
+      descripcion: formData.descripcion,
+    }
+    
+    try {
+      if(editingTemporada?.id) {
+        await updateTemporada({ id: parseInt(editingTemporada.id), data: temporada });
+      }
+      setEditingTemporada(null);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const handleEliminarTemporada = async (idTemporada: string) => {
+    try {
+      await deleteTemporada({ id: parseInt(idTemporada) });
+    } catch (error) {
+      console.error(error);
+      toast.error("Error al eliminar temporada");
+    }
   };
 
   const formatDate = (dateString: string) => {
     // Crear la fecha y ajustar para zona horaria local
-    const date = new Date(dateString + 'T00:00:00');
+    const date = new Date(dateString + "T00:00:00");
     return date.toLocaleDateString("es-ES", {
       year: "numeric",
       month: "long",
@@ -101,9 +103,12 @@ export function SeasonManagement() {
         <CardHeader>
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <CardTitle className="text-2xl">Temporadas del Club</CardTitle>
-            <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+            <Dialog
+              open={isCreateDialogOpen}
+              onOpenChange={setIsCreateDialogOpen}
+            >
               <DialogTrigger asChild>
-                <Button className="bg-primary hover:bg-primary/90">
+                <Button className="bg-primary hover:bg-primary/85">
                   <Plus className="h-4 w-4 mr-2" />
                   Crear Temporada
                 </Button>
@@ -122,7 +127,8 @@ export function SeasonManagement() {
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground">
-            Gestiona las temporadas de pileta del club. Define fechas de inicio y fin para cada temporada.
+            Gestiona las temporadas de pileta del club. Define fechas de inicio
+            y fin para cada temporada.
           </p>
         </CardContent>
       </Card>
@@ -132,24 +138,32 @@ export function SeasonManagement() {
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-16">
             <LoadingSpinner size="lg" />
-            <p className="mt-4 text-sm text-muted-foreground">Cargando temporadas...</p>
+            <p className="mt-4 text-sm text-muted-foreground">
+              Cargando temporadas...
+            </p>
           </div>
-        ) : temporadas.length === 0 ? (
+        ) : !temporadas || temporadas.length === 0 ? (
           <Card>
             <CardContent className="text-center py-8">
               <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <p className="text-muted-foreground">No hay temporadas registradas</p>
+              <p className="text-muted-foreground">
+                No hay temporadas registradas
+              </p>
             </CardContent>
           </Card>
         ) : (
-          temporadas.map((temporada) => (
+          temporadas?.map((temporada) => (
             <Card key={temporada.id}>
               <CardHeader>
                 <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
                   <div className="space-y-2 flex-1">
-                    <CardTitle className="text-xl">{temporada.nombre}</CardTitle>
+                    <CardTitle className="text-xl">
+                      {temporada.nombre}
+                    </CardTitle>
                     {temporada.descripcion && (
-                      <p className="text-muted-foreground">{temporada.descripcion}</p>
+                      <p className="text-muted-foreground">
+                        {temporada.descripcion}
+                      </p>
                     )}
                   </div>
                   <div className="flex gap-2">
@@ -185,22 +199,34 @@ export function SeasonManagement() {
 
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <Button variant="outline" size="sm" className="text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-destructive border-destructive hover:bg-destructive hover:text-destructive-foreground"
+                        >
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </AlertDialogTrigger>
                       <AlertDialogContent>
                         <AlertDialogHeader>
-                          <AlertDialogTitle>¿Eliminar temporada?</AlertDialogTitle>
+                          <AlertDialogTitle>
+                            ¿Eliminar temporada?
+                          </AlertDialogTitle>
                           <AlertDialogDescription>
-                            Esta acción no se puede deshacer. Se eliminará permanentemente la temporada "{temporada.nombre}".
+                            Esta acción no se puede deshacer. Se eliminará
+                            permanentemente la temporada "{temporada.nombre}".
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
-                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                          <AlertDialogCancel disabled={isPendingDelete}>Cancelar</AlertDialogCancel>
                           <AlertDialogAction
-                            onClick={() => handleEliminarTemporada(temporada.id)}
-                            className="bg-destructive hover:bg-destructive/90"
+                            onClick={() => {
+                              if (temporada?.id) {
+                                handleEliminarTemporada(temporada?.id);
+                              }
+                            }}
+                            className="bg-destructive hover:bg-destructive/85"
+                            disabled={isPendingDelete}
                           >
                             Eliminar
                           </AlertDialogAction>
@@ -214,11 +240,15 @@ export function SeasonManagement() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <p className="text-sm font-medium">Fecha de Inicio</p>
-                    <p className="text-sm text-muted-foreground">{formatDate(temporada.fechaInicio)}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {formatDate(temporada.fechaInicio)}
+                    </p>
                   </div>
                   <div>
                     <p className="text-sm font-medium">Fecha de Fin</p>
-                    <p className="text-sm text-muted-foreground">{formatDate(temporada.fechaFin)}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {formatDate(temporada.fechaFin)}
+                    </p>
                   </div>
                 </div>
               </CardContent>

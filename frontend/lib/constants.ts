@@ -86,9 +86,12 @@ export const MENSAJES_ERROR = {
 
 // Mensajes de éxito
 export const MENSAJES_EXITO = {
-  SOCIO_ELIMINADO: 'Socio eliminado exitosamente.',
   SOCIO_CREADO: 'Socio creado exitosamente.',
+  SOCIO_ELIMINADO: 'Socio eliminado exitosamente.',
   SOCIO_ACTUALIZADO: 'Socio actualizado exitosamente.',
+  TEMPORADA_CREADA: 'Temporada creada exitosamente.',
+  TEMPORADA_ELIMINADA: 'Temporada eliminada exitosamente.',
+  TEMPORADA_ACTUALIZADA: 'Temporada actualizada exitosamente.',
   ASOCIACION_CREADA: 'Socio agregado a la temporada.',
   ASOCIACION_ELIMINADA: 'Socio removido de la temporada.'
 } as const;

@@ -9,14 +9,6 @@ import { Save, X } from "lucide-react";
 import { Temporada } from "@/lib/types";
 import { MENSAJES_ERROR, VALIDACION } from "@/lib/constants";
 
-interface SeasonFormData {
-  nombre: string;
-  fechaInicio: string;
-  fechaFin: string;
-  estado: 'activa' | 'inactiva' | 'proxima' | 'finalizada';
-  descripcion?: string;
-}
-
 interface SeasonFormProps {
   season?: Temporada;
   onSubmit: (temporada: Omit<Temporada, "id">) => void;
@@ -24,11 +16,10 @@ interface SeasonFormProps {
 }
 
 export function SeasonForm({ season, onSubmit, onCancel }: SeasonFormProps) {
-  const [datosFormulario, setDatosFormulario] = useState<SeasonFormData>({
+  const [datosFormulario, setDatosFormulario] = useState<Temporada>({
     nombre: "",
     fechaInicio: "",
     fechaFin: "",
-    estado: 'activa',
     descripcion: "",
   });
 
@@ -40,7 +31,6 @@ export function SeasonForm({ season, onSubmit, onCancel }: SeasonFormProps) {
         nombre: season.nombre,
         fechaInicio: season.fechaInicio,
         fechaFin: season.fechaFin,
-        estado: season.estado,
         descripcion: season.descripcion || "",
       });
     }
@@ -93,7 +83,7 @@ export function SeasonForm({ season, onSubmit, onCancel }: SeasonFormProps) {
     onSubmit(datosFormulario);
   };
 
-  const handleCambioInput = (campo: keyof SeasonFormData, valor: string) => {
+  const handleCambioInput = (campo: keyof Temporada, valor: string) => {
     setDatosFormulario((prev) => ({ ...prev, [campo]: valor }));
 
     // Limpiar error cuando el usuario empieza a escribir
@@ -180,12 +170,12 @@ export function SeasonForm({ season, onSubmit, onCancel }: SeasonFormProps) {
       <div className="flex gap-3 pt-4">
         <Button
           type="submit"
-          className="flex-1 bg-primary hover:bg-primary/90"
+          className="flex-1 bg-primary hover:bg-primary/85 hover:scale-105 text-white"
         >
           <Save className="h-4 w-4 mr-2" />
           {season ? "Actualizar" : "Crear"} Temporada
         </Button>
-        <Button type="button" variant="outline" onClick={onCancel} className="flex-1 hover:bg-destructive">
+        <Button type="button" variant="outline" onClick={onCancel} className="flex-1 bg-destructive hover:bg-destructive/85 hover:scale-105 text-white">
           <X className="h-4 w-4 mr-2" />
           Cancelar
         </Button>

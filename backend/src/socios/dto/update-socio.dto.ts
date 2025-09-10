@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsDateString, IsEmail, IsEnum } from 'class-validator';
+import { IsString, IsOptional, IsDateString, IsEmail, IsEnum, IsBoolean } from 'class-validator';
 
 export enum Genero {
   MASCULINO = 'MASCULINO',
@@ -46,4 +46,7 @@ export class UpdateSocioDto {
 
   @IsDateString()
   fechaAlta: string;
+
+  @IsBoolean()
+  eliminarFotoVieja?: boolean;
 }

@@ -1,26 +1,27 @@
 import { Injectable } from '@nestjs/common';
-// import { CreateTemporadaDto } from './dto/create-temporada.dto';
-// import { UpdateTemporadaDto } from './dto/update-temporada.dto';
+import { TemporadaPiletaRepository } from './repositories/temporada.repository';
+import { CreateTemporadaDto } from './dto/create-temporada.dto';
 
 @Injectable()
 export class TemporadasService {
-  // create(createTemporadaDto: CreateTemporadaDto) {
-  //   return 'This action adds a new temporada';
-  // }
+  constructor(private readonly temporadaRepository: TemporadaPiletaRepository) {}
+  create(createTemporadaDto: CreateTemporadaDto) {
+    return this.temporadaRepository.save(createTemporadaDto);
+  }
 
   findAll() {
-    return `This action returns all temporadas`;
+    return this.temporadaRepository.find({order: {fechaInicio: 'DESC'}});
   }
 
   findOne(id: number) {
     return `This action returns a #${id} temporada`;
   }
 
-  // update(id: number, updateTemporadaDto: UpdateTemporadaDto) {
-  //   return `This action updates a #${id} temporada`;
-  // }
+  update(id: number, updateTemporadaDto: CreateTemporadaDto) {
+    return this.temporadaRepository.update(id, updateTemporadaDto);
+  }
 
   remove(id: number) {
-    return `This action removes a #${id} temporada`;
+    return this.temporadaRepository.delete(id);
   }
 }
