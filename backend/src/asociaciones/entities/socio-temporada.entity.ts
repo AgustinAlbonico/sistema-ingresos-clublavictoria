@@ -1,17 +1,14 @@
 import { Socio } from 'src/socios/entities/socio.entity';
 import { TemporadaPileta } from 'src/temporadas/entities/temporada.entity';
-import { Column, Entity, JoinColumn, ManyToOne, PrimaryColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryColumn, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity('SOCIO_TEMPORADA')
 export class SocioTemporada {
-  @PrimaryColumn({ name: 'id_socio' })
-  id_socio: number;
+  @PrimaryGeneratedColumn({ name: 'id_socio_temporada' })
+  id: number;
 
-  @PrimaryColumn({ name: 'id_temporada' })
-  id_temporada: number;
-
-  @Column({ type: 'date', default: () => 'CURRENT_DATE' })
-  fecha_inscripcion: Date;
+  @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP', name: "fecha_hora_inscripcion" })
+  fechaHoraInscripcion: string;
 
   @ManyToOne(() => Socio, (socio) => socio.temporadas, {
     onDelete: 'CASCADE',

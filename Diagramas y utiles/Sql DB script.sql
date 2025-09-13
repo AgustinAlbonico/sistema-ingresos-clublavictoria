@@ -26,7 +26,7 @@ CREATE TABLE SOCIO (
     id_socio INT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
     apellido VARCHAR(100) NOT NULL,
-    dni VARCHAR(20) UNIQUE,
+    dni VARCHAR(20),
     telefono VARCHAR(20),
     email VARCHAR(150),
     fecha_alta DATE NOT NULL DEFAULT (CURRENT_DATE),
@@ -35,7 +35,6 @@ CREATE TABLE SOCIO (
     estado ENUM('ACTIVO', 'INACTIVO') DEFAULT 'ACTIVO',
     genero ENUM('MASCULINO', 'FEMENINO'),
     foto_url VARCHAR(500) COMMENT 'URL de la foto del socio en servicio externo',
-    foto_public_id VARCHAR(255) COMMENT 'ID publico de la foto del socio en Cloudinary',
 
     INDEX idx_dni (dni),
     INDEX idx_nombre_apellido (apellido, nombre),
@@ -61,14 +60,13 @@ CREATE TABLE TEMPORADA_PILETA (
 -- TABLA: SOCIO_TEMPORADA (Relación N:M)
 -- =============================================
 CREATE TABLE SOCIO_TEMPORADA (
+	id_socio_temporada INT AUTO_INCREMENT PRIMARY KEY,
     id_socio INT NOT NULL,
     id_temporada INT NOT NULL,
-    fecha_inscripcion DATE NOT NULL DEFAULT (CURRENT_DATE),
-    
-    PRIMARY KEY (id_socio, id_temporada),
+    fecha_hora_inscripcion DATETIME NOT NULL DEFAULT (current_timestamp()),
     
     CONSTRAINT fk_socio_temporada_socio 
-        FOREIGN KEY (id_socio) REFERENCES SOCIOS(id_socio) 
+        FOREIGN KEY (id_socio) REFERENCES SOCIO(id_socio) 
         ON DELETE CASCADE ON UPDATE CASCADE,
         
     CONSTRAINT fk_socio_temporada_temporada 
@@ -89,7 +87,7 @@ CREATE TABLE REGISTRO_INGRESO (
     id_socio INT NULL,
     
     CONSTRAINT fk_socio
-        FOREIGN KEY (id_socio) REFERENCES SOCIOS(id_socio) 
+        FOREIGN KEY (id_socio) REFERENCES SOCIO(id_socio) 
         ON DELETE SET NULL ON UPDATE CASCADE,
         
     INDEX idx_fecha (fecha),

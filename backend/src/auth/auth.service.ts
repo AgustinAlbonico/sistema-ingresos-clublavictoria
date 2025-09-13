@@ -41,4 +41,9 @@ export class AuthService {
 
     return token;
   }
+
+  async generarPasswordHash(password: string) {
+    console.log(password);
+    return await bcrypt.hash(password, 10);
+  }
 }

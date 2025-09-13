@@ -59,4 +59,10 @@ export class SociosController {
   remove(@Param('id') id: number) {
     return this.sociosService.remove(id);
   }
+
+  // @Get('disponibles-para-temporada/:temporadaId')
+  // @Private()
+  // getSociosDisponibles(@Param('temporadaId') temporadaId: number) {
+  //   return this.sociosService.getSociosDisponibles(temporadaId);
+  // }
 }

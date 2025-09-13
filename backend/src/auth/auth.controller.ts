@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { Private } from 'src/common/decorators/private.decorator';
@@ -12,9 +12,8 @@ export class AuthController {
     return await this.authService.login(input);
   }
 
-  @Get('test')
-  @Private()
-  test() {
-    return 'hola';
+  @Post("generarPasswordHash")
+  async generarPasswordHash(@Body() input: { password: string }) {
+    return await this.authService.generarPasswordHash(input.password);
   }
 }

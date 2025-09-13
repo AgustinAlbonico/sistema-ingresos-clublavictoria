@@ -28,11 +28,13 @@ export class TemporadasController {
   }
 
   @Get(':id')
+  @Private()
   findOne(@Param('id') id: string) {
     return this.temporadasService.findOne(+id);
   }
 
   @Patch(':id')
+  @Private()
   update(
     @Param('id') id: number,
     @Body() updateTemporadaDto: CreateTemporadaDto,
@@ -41,7 +43,20 @@ export class TemporadasController {
   }
 
   @Delete(':id')
+  @Private()
   remove(@Param('id') id: number) {
     return this.temporadasService.remove(id);
+  }
+
+  @Get(':id/socios')
+  @Private()
+  getSocios(@Param('id') id: number) {
+    return this.temporadasService.getSocios(id);
+  }
+
+  @Post(':id/socios')
+  @Private()
+  agregarSocioATemporada(@Param('id') id: number, @Body() body: { socioId: number }) {
+    return this.temporadasService.agregarSocioATemporada(id, body.socioId);
   }
 }

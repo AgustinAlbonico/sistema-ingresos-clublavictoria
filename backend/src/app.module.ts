@@ -13,7 +13,6 @@ import { Usuario } from './auth/entities/usuario.entity';
 import { RegistroIngreso } from './registro-ingreso/entities/registro-ingreso.entity';
 import { AppConfigModule } from './config/AppConfig/app-config.module';
 import { CloudinaryModule } from './cloudinary/cloudinary.module';
-import { NestjsFormDataModule } from 'nestjs-form-data';
 
 @Module({
   imports: [
@@ -22,7 +21,6 @@ import { NestjsFormDataModule } from 'nestjs-form-data';
     TemporadasModule,
     RegistroIngresoModule,
     AsociacionesModule,
-    NestjsFormDataModule.config({isGlobal: true}),
     TypeOrmModule.forRootAsync({
       imports: [AppConfigModule],
       inject: [AppConfigService],

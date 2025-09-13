@@ -34,7 +34,6 @@ export class SociosService {
 
     if (file) {
       try {
-        console.log('file');
         const uploadFile = await this.cloudinaryService.uploadFile(file);
         fotoUrl = uploadFile.secure_url;
       } catch (error) {
@@ -76,15 +75,13 @@ export class SociosService {
     } else if (dto.eliminarFotoVieja && dto.fotoUrl) {
       console.log('Eliminando la foto del socio de cloudinary');
       await this.cloudinaryService.deleteFile(dto.fotoUrl);
-      socio.fotoUrl = "";
+      socio.fotoUrl = '';
     }
 
     // 👉 Sacamos lo que no queremos pisar
     const { fotoUrl, eliminarFotoVieja, fechaAlta, ...rest } = dto;
 
-
     Object.assign(socio, rest);
-
 
     return this.socioRepository.save(socio);
   }
@@ -134,4 +131,14 @@ export class SociosService {
       throw new BadRequestException('Error deleting socio: ' + error.message);
     }
   }
+
+  // async getSociosDisponibles(temporadaId: number) {
+  //   try {
+  //     return await this.socioRepository.find({
+  //       where: { temporadas },
+  //     });
+  //   } catch (error) {
+  //     throw new BadRequestException('Error fetching socios: ' + error.message);
+  //   }
+  // }
 }

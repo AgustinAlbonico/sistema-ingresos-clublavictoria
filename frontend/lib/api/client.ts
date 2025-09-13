@@ -1,10 +1,11 @@
 import axios, { AxiosInstance } from "axios";
 
 const API_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://192.168.100.7:3000/api";
+  process.env.NEXT_PUBLIC_API_URL || "http://192.168.1.2:3000/api";
 
 export const apiClient = axios.create({
   baseURL: API_URL,
+  timeout: 10000,
 });
 
 // Request interceptor to add auth token to requests
