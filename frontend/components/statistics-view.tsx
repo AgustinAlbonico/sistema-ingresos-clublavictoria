@@ -1,46 +1,44 @@
 "use client"
 
 import { useState, useMemo } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Calendar, Users, TrendingUp, CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { StatCard } from "@/components/ui/stat-card";
+import {
+  CalendarDays,
+  TrendingUp,
+  Users,
+  Calendar,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import { usePagination } from '@/hooks/use-pagination'
 import { useSearch } from '@/hooks/use-search'
 import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { ErrorMessage } from '@/components/ui/error-message'
 
-import { RegistroEntrada, EstadisticasDiarias } from '@/lib/types'
-import { mockSocios, mockRegistrosEntrada, mockEstadisticasDiarias } from '@/lib/mock-data'
+import { RegistroEntrada } from '@/lib/types'
 import { PAGINACION } from '@/lib/constants'
 
 export function StatisticsView() {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-
-  // Obtener estadísticas del día seleccionado
-  const selectedDayStats = useMemo(() => {
-    return mockEstadisticasDiarias.find(stat => stat.fecha === selectedDate) || {
-      fecha: selectedDate,
-      totalEntradas: 0,
-      actualmenteDentro: 0,
-      picoOcupacion: 0,
-      tiempoPromedioEstadia: 0
-    }
-  }, [selectedDate])
+  
+  // Estado para datos que vendrán de la API
+  const [registrosEntrada, setRegistrosEntrada] = useState<RegistroEntrada[]>([])
 
   // Búsqueda en logs
   const { searchTerm, handleSearchChange, clearSearch } = useSearch({
     onSearch: (query) => {
-      // Ahora filtra los logs reales en lugar de hacer console.log
       console.log('Searching logs for:', query)
     }
   })
 
   // Filtrar logs basado en el término de búsqueda
   const filteredLogs = useMemo(() => {
-    let logs = mockRegistrosEntrada.filter(log => log.fecha === selectedDate)
+    let logs = registrosEntrada.filter(log => log.fecha === selectedDate)
     
     if (searchTerm.trim()) {
       const searchLower = searchTerm.toLowerCase()
@@ -51,7 +49,7 @@ export function StatisticsView() {
     }
     
     return logs
-  }, [selectedDate, searchTerm])
+  }, [selectedDate, searchTerm, registrosEntrada])
 
   // Paginación
   const pagination = usePagination({
@@ -65,10 +63,8 @@ export function StatisticsView() {
     const poolEntries = todayLogs.length
     const clubEntries = Math.floor(poolEntries * 0.3)
     const totalEntries = poolEntries + clubEntries
-    const members = todayLogs.filter(log => 
-      mockSocios.find(m => m.id === log.idSocio)?.estado === 'activo'
-    ).length
-    const nonMembers = totalEntries - members
+    const members = todayLogs.length // Simplificado hasta tener API
+    const nonMembers = 0 // Se calculará con datos reales
 
     return {
       totalEntries,
@@ -144,70 +140,40 @@ export function StatisticsView() {
 
       {/* Estadísticas del Día Seleccionado */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Ingresos del Día</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{dayStats.totalEntries}</div>
-            <p className="text-xs text-muted-foreground">
-              Total de entradas
-            </p>
-          </CardContent>
-        </Card>
+        <StatCard
+          title="Total Ingresos del Día"
+          value={dayStats.totalEntries}
+          description="Total de entradas"
+          icon={TrendingUp}
+        />
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Ingresos a Pileta</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{dayStats.poolEntries}</div>
-            <p className="text-xs text-muted-foreground">
-              Acceso a pileta
-            </p>
-          </CardContent>
-        </Card>
+        <StatCard
+          title="Ingresos a Pileta"
+          value={dayStats.poolEntries}
+          description="Acceso a pileta"
+          icon={Users}
+        />
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Ingresos al Club</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{dayStats.clubEntries}</div>
-            <p className="text-xs text-muted-foreground">
-              Solo club
-            </p>
-          </CardContent>
-        </Card>
+        <StatCard
+          title="Ingresos al Club"
+          value={dayStats.clubEntries}
+          description="Solo club"
+          icon={Users}
+        />
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Socios</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{dayStats.members}</div>
-            <p className="text-xs text-muted-foreground">
-              Socios activos
-            </p>
-          </CardContent>
-        </Card>
+        <StatCard
+          title="Total Socios"
+          value={dayStats.members}
+          description="Socios activos"
+          icon={Users}
+        />
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total No Socios</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{dayStats.nonMembers}</div>
-            <p className="text-xs text-muted-foreground">
-              Visitantes
-            </p>
-          </CardContent>
-        </Card>
+        <StatCard
+          title="Total No Socios"
+          value={dayStats.nonMembers}
+          description="Visitantes"
+          icon={Users}
+        />
       </div>
 
       {/* Registro de Entradas */}

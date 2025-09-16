@@ -22,6 +22,7 @@ export const useAgregarSocioTemporada = () => {
       // Invalidate and refetch related queries
       queryClient.invalidateQueries({ queryKey: ["socios-temporada", temporadaId] });
       queryClient.invalidateQueries({ queryKey: ["socios-disponibles", temporadaId] });
+      queryClient.invalidateQueries({ queryKey: ["socios"] });
       
       toast.success(MENSAJES_EXITO.ASOCIACION_CREADA);
     },

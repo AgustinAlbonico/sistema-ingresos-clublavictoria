@@ -12,7 +12,6 @@ import { toast } from "sonner";
 import { Users } from "lucide-react";
 
 // Import types and constants
-import { Temporada, SocioWithFoto } from "@/lib/types";
 import { PAGINACION } from "@/lib/constants";
 import { useSearch } from "@/hooks/use-search";
 import { useTemporadas } from "@/hooks/api/temporadas/useTemporadas";
@@ -115,14 +114,14 @@ export function AssociationManagement() {
       
       if (searchTerm.trim()) {
         const busquedaLower = searchTerm.toLowerCase();
-        socios = socios.filter((socio: SocioWithFoto) => {
+        socios = socios.filter((socio) => {
           return (
-            `${socio.nombre} ${socio.apellido}`
+            `${socio.socio.nombre} ${socio.socio.apellido}`
               .toLowerCase()
               .includes(busquedaLower) ||
-            socio.dni.toLowerCase().includes(busquedaLower) ||
-            (socio.email &&
-              socio.email.toLowerCase().includes(busquedaLower))
+            socio.socio.dni.toLowerCase().includes(busquedaLower) ||
+            (socio.socio.email &&
+              socio.socio.email.toLowerCase().includes(busquedaLower))
           );
         });
       }
@@ -189,6 +188,7 @@ export function AssociationManagement() {
                 onAddMember={handleAgregarSocioATemporada}
                 isAdding={agregarSocioMutation.isPending}
                 canManageMembers={puedeGestionarSocios}
+                temporadaId={temporadaSeleccionada}
               />
             </div>
 

@@ -26,9 +26,10 @@ import {
 import { Search, Mail, Phone, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
 import { SocioWithFoto } from "@/lib/types";
 import { PAGINACION } from "@/lib/constants";
+import { SocioTemporada } from "@/hooks/api/socios/useSociosTemporada";
 
 interface SeasonMemberListProps {
-  members: SocioWithFoto[];
+  members: SocioTemporada[];
   searchTerm: string;
   onSearchChange: (value: string) => void;
   onRemoveMember: (memberId: string) => void;
@@ -102,15 +103,15 @@ export function SeasonMemberList({
             >
               <div className="flex items-center gap-3 flex-1 min-w-0">
                 <div className="flex-shrink-0 w-12 h-12 bg-muted rounded-full flex items-center justify-center overflow-hidden">
-                  {(socio as any).fotoUrl ? (
+                  {(socio.socio as any).fotoUrl ? (
                     <img
-                      src={(socio as any).fotoUrl}
-                      alt={`${socio.nombre} ${socio.apellido}`}
+                      src={(socio.socio as any).fotoUrl}
+                      alt={`${socio.socio.nombre} ${socio.socio.apellido}`}
                       className="w-full h-full object-cover"
                     />
                   ) : (
                     <span className="text-lg font-semibold text-muted-foreground">
-                      {socio.nombre.charAt(0)}{socio.apellido.charAt(0)}
+                      {socio.socio.nombre.charAt(0)}{socio.socio.apellido.charAt(0)}
                     </span>
                   )}
                 </div>
@@ -118,26 +119,26 @@ export function SeasonMemberList({
                   <div className="flex flex-col sm:flex-row sm:items-center sm:gap-4">
                     <div className="flex flex-col">
                       <span className="font-medium text-foreground truncate">
-                        {socio.nombre} {socio.apellido}
+                        {socio.socio.nombre} {socio.socio.apellido}
                       </span>
                       <span className="text-sm font-mono text-foreground">
-                        {socio.dni}
+                        {socio.socio.dni}
                       </span>
                     </div>
                     <div className="flex flex-col gap-1 mt-1 sm:mt-0">
-                      {socio.email && (
+                      {socio.socio.email && (
                         <div className="flex items-center gap-2">
                           <Mail className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                           <span className="text-sm text-muted-foreground truncate">
-                            {socio.email}
+                            {socio.socio.email}
                           </span>
                         </div>
                       )}
-                      {socio.telefono && (
+                      {socio.socio.telefono && (
                         <div className="flex items-center gap-2">
                           <Phone className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                           <span className="text-sm text-muted-foreground">
-                            {socio.telefono}
+                            {socio.socio.telefono}
                           </span>
                         </div>
                       )}
@@ -156,7 +157,7 @@ export function SeasonMemberList({
                         variant="outline"
                         size="sm"
                         disabled={isRemoving}
-                        className="text-destructive hover:text-destructive"
+                        className="text-destructive hover:text-white hover:bg-destructive/85 duration-300"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -165,15 +166,15 @@ export function SeasonMemberList({
                       <AlertDialogHeader>
                         <AlertDialogTitle>¿Eliminar socio de la temporada?</AlertDialogTitle>
                         <AlertDialogDescription>
-                          ¿Estás seguro de que deseas eliminar a {socio.nombre} {socio.apellido} de esta temporada?
+                          ¿Estás seguro de que deseas eliminar a {socio.socio.nombre} {socio.socio.apellido} de esta temporada?
                           Esta acción no se puede deshacer.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
                         <AlertDialogCancel>Cancelar</AlertDialogCancel>
                         <AlertDialogAction
-                          onClick={() => socio.id && onRemoveMember(socio.id)}
-                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          onClick={() => socio.id && onRemoveMember(socio.id.toString())}
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/85"
                         >
                           Eliminar
                         </AlertDialogAction>

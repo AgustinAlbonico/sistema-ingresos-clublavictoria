@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Socio, RespuestaBusqueda, Paginacion } from '@/lib/types';
 import { BUSQUEDA, PAGINACION } from '@/lib/constants';
 import { handleFetchError, handleNetworkError, validateApiResponse, logError } from '@/lib/error-handler';
-import { getSociosDisponiblesParaTemporada, mockSocios } from '@/lib/mock-data';
 
 // Función de debounce
 function debounce<T extends (...args: any[]) => any>(
@@ -24,39 +23,6 @@ function debounce<T extends (...args: any[]) => any>(
   return debouncedFn;
 }
 
-// Función para simular paginación con mock data
-function paginateMockData(data: Socio[], page: number, limit: number): RespuestaBusqueda {
-  const startIndex = (page - 1) * limit;
-  const endIndex = startIndex + limit;
-  const paginatedData = data.slice(startIndex, endIndex);
-  
-  return {
-    socios: paginatedData,
-    paginacion: {
-      paginaActual: page,
-      totalPaginas: Math.ceil(data.length / limit),
-      totalElementos: data.length,
-      elementosPorPagina: limit,
-      tieneSiguientePagina: endIndex < data.length,
-      tieneAnteriorPagina: page > 1
-    }
-  };
-}
-
-// Función para filtrar mock data por búsqueda
-function filtrarMockSocios(socios: Socio[], terminoBusqueda: string): Socio[] {
-  if (!terminoBusqueda || terminoBusqueda.length < BUSQUEDA.LONGITUD_MINIMA_BUSQUEDA) {
-    return socios;
-  }
-  
-  const termino = terminoBusqueda.toLowerCase();
-  return socios.filter(socio => 
-    socio.nombre.toLowerCase().includes(termino) ||
-    socio.apellido.toLowerCase().includes(termino) ||
-    socio.dni.includes(termino) ||
-    socio.email.toLowerCase().includes(termino)
-  );
-}
 
 export function useAvailableMembers(idTemporada: string) {
   const [terminoBusqueda, setTerminoBusqueda] = useState('');
@@ -96,48 +62,15 @@ export function useAvailableMembers(idTemporada: string) {
         setSocios(validatedData.socios || []);
         setPaginacion(validatedData.paginacion || null);
       } else {
-        // API no disponible - usar mock data
-        console.warn('API not available, using mock data');
-        
-        // Obtener socios disponibles para la temporada
-        const sociosDisponibles = getSociosDisponiblesParaTemporada(idTemporada);
-        
-        // Filtrar por búsqueda si existe
-        const sociosFiltrados = filtrarMockSocios(sociosDisponibles, busqueda);
-        
-        // Paginar resultados
-        const respuestaPaginada = paginateMockData(
-          sociosFiltrados, 
-          pagina, 
-          PAGINACION.TAMAÑO_PAGINA_POR_DEFECTO
-        );
-        
-        setSocios(respuestaPaginada.socios);
-        setPaginacion(respuestaPaginada.paginacion);
+        // API no disponible - mostrar error
+        throw new Error('API endpoint not available');
       }
     } catch (err) {
-      // En caso de error, usar mock data como fallback
-      console.warn('Error fetching from API, falling back to mock data:', err);
-      
-      try {
-        const sociosDisponibles = getSociosDisponiblesParaTemporada(idTemporada);
-        const sociosFiltrados = filtrarMockSocios(sociosDisponibles, busqueda);
-        const respuestaPaginada = paginateMockData(
-          sociosFiltrados, 
-          pagina, 
-          PAGINACION.TAMAÑO_PAGINA_POR_DEFECTO
-        );
-        
-        setSocios(respuestaPaginada.socios);
-        setPaginacion(respuestaPaginada.paginacion);
-        setError(null); // Limpiar error ya que pudimos usar mock data
-      } catch (mockError) {
-        const errorMessage = handleNetworkError(mockError);
-        setError(errorMessage);
-        setSocios([]);
-        setPaginacion(null);
-        logError(mockError, 'useAvailableMembers.fetchSocios.mockFallback');
-      }
+      const errorMessage = handleNetworkError(err);
+      setError(errorMessage);
+      setSocios([]);
+      setPaginacion(null);
+      logError(err, 'useAvailableMembers.fetchSocios');
     } finally {
       setLoading(false);
     }

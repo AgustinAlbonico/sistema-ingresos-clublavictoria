@@ -36,7 +36,7 @@ export function SeasonSelector({
             <SelectValue placeholder="Selecciona una temporada" />
           </div>
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent className="cursor-pointer">
           {seasons.map((temporada) => (
             <SelectItem key={temporada.id} value={temporada.id!}>
               <div className="flex flex-col sm:flex-row items-center sm:gap-4">

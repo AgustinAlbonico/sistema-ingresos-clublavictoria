@@ -21,18 +21,20 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import { SocioWithFoto } from "@/lib/types";
-import { useSociosDisponibles } from "@/hooks/api/socios/useSociosDisponibles";
+import { useSociosDisponiblesTemporada } from "@/hooks/api/temporadas/useSociosDisponiblesTemporada";
 
 interface AddMemberDialogProps {
   onAddMember: (memberId: string) => void;
   isAdding: boolean;
   canManageMembers: boolean;
+  temporadaId: string | null;
 }
 
 export function AddMemberDialog({
   onAddMember,
   isAdding,
   canManageMembers,
+  temporadaId,
 }: AddMemberDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -48,7 +50,7 @@ export function AddMemberDialog({
     page,
     totalPages,
     total,
-  } = useSociosDisponibles();
+  } = useSociosDisponiblesTemporada(temporadaId);
 
   const sociosData = socios || [];
 

@@ -1,17 +1,12 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Users, Calendar, UserCheck, TrendingUp } from "lucide-react"
-import { getMockSocios, getMockTemporadas } from "../lib/mock-data"
-import { ESTADO_SOCIO, ESTADO_TEMPORADA } from "../lib/constants"
 
 export function DashboardStats() {
-  // Calculate stats from mock data
-  const socios = getMockSocios()
-  const temporadas = getMockTemporadas()
-  
-  const totalSocios = socios.length
-  const sociosActivos = socios.filter(socio => socio.estado === ESTADO_SOCIO.ACTIVO).length
-  const temporadasActivas = temporadas.filter(temporada => temporada.estado === ESTADO_TEMPORADA.ACTIVA).length
-  const nuevosSociosEsteMes = Math.floor(totalSocios * 0.05) // Mock calculation
+  // Placeholder values - to be replaced with API data
+  const totalSocios = 0
+  const sociosActivos = 0
+  const temporadasActivas = 0
+  const nuevosSociosEsteMes = 0
   
   const stats = [
     {
@@ -31,7 +26,7 @@ export function DashboardStats() {
     {
       title: "Socios Activos",
       value: sociosActivos.toString(),
-      description: `${Math.round((sociosActivos / totalSocios) * 100)}% del total`,
+      description: "0% del total",
       icon: UserCheck,
       trend: "up",
     },
