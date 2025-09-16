@@ -42,7 +42,7 @@ export class SociosController {
   @Private()
   update(
     @Param('id') id: number,
-    @Body() updateSocioDto: any,
+    @Body() updateSocioDto: UpdateSocioDto,
     @UploadedFile() file?: Express.Multer.File,
   ) {
     return this.sociosService.update(id, updateSocioDto, file);

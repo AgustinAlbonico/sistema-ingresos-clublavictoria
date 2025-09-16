@@ -163,7 +163,7 @@ export function MemberManagement() {
                     {/* Socio Details */}
                     <div className="flex-1 min-w-0">
                       <h3 className="font-semibold text-foreground text-base sm:text-lg truncate">
-                        {`${socio.nombre}, ${socio.apellido}`}
+                        {`${socio.apellido}, ${socio.nombre}`}
                       </h3>
                       <div className="space-y-1">
                         <p className="text-sm text-muted-foreground">
@@ -233,7 +233,7 @@ export function MemberManagement() {
                               Cancelar
                             </AlertDialogCancel>
                             <AlertDialogAction
-                              onClick={() => handleDeleteSocio(socio.id)}
+                              onClick={() => socio.id && handleDeleteSocio(socio.id)}
                               className="bg-destructive hover:bg-destructive/85 text-destructive-foreground w-full sm:w-auto"
                               disabled={isLoadingDelete}  
                             >
