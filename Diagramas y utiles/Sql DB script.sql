@@ -150,7 +150,7 @@ ON REGISTRO_INGRESO (fecha, id_socio);
 -- =============================================
 -- USUARIOS
 -- =============================================
-INSERT INTO USUARIOS (usuario, password) VALUES
+INSERT INTO USUARIO (usuario, password) VALUES
 ('admin', 'admin123'),
 ('recepcion', 'pass123'),
 ('control', 'control2025');
@@ -158,7 +158,7 @@ INSERT INTO USUARIOS (usuario, password) VALUES
 -- =============================================
 -- SOCIOS
 -- =============================================
-INSERT INTO SOCIOS (nombre, apellido, dni, telefono, email, fecha_nacimiento, direccion, estado, genero, foto_url) VALUES
+INSERT INTO SOCIO (nombre, apellido, dni, telefono, email, fecha_nacimiento, direccion, estado, genero, foto_url) VALUES
 ('Juan', 'Pérez', '30111222', '1123456789', 'juan.perez@mail.com', '1990-05-14', 'Av. Siempre Viva 123', 'ACTIVO', 'MASCULINO', 'https://picsum.photos/id/1011/200'),
 ('María', 'Gómez', '30111333', '1134567890', 'maria.gomez@mail.com', '1988-03-22', 'Calle Falsa 456', 'ACTIVO', 'FEMENINO', 'https://picsum.photos/id/1012/200'),
 ('Carlos', 'López', '30111444', '1145678901', 'carlos.lopez@mail.com', '1995-07-10', 'San Martín 789', 'INACTIVO', 'MASCULINO', 'https://picsum.photos/id/1013/200'),
@@ -175,11 +175,11 @@ INSERT INTO TEMPORADA_PILETA (nombre, fecha_inicio, fecha_fin, descripcion) VALU
 -- =============================================
 -- SOCIO_TEMPORADA
 -- =============================================
-INSERT INTO SOCIO_TEMPORADA (id_socio, id_temporada, fecha_inscripcion) VALUES
-(1, 1, '2025-11-15'),
-(2, 1, '2025-11-20'),
-(4, 2, '2025-05-20'),
-(5, 2, '2025-05-25');
+INSERT INTO SOCIO_TEMPORADA (id_socio, id_temporada, fecha_hora_inscripcion) VALUES
+(1, 1, '2025-11-15 10:00:00'),
+(2, 1, '2025-11-20 11:30:00'),
+(4, 2, '2025-05-20 09:15:00'),
+(5, 2, '2025-05-25 17:45:00');
 
 -- =============================================
 -- REGISTRO DE INGRESOS
