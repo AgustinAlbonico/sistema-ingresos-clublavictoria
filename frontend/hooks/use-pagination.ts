@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { PAGINATION } from '@/lib/constants'
+import { PAGINACION } from '@/lib/constants'
 
 interface UsePaginationOptions {
   totalItems: number
@@ -10,7 +10,7 @@ interface UsePaginationOptions {
 export function usePagination({
   totalItems,
   initialPage = 1,
-  initialPageSize = PAGINATION.DEFAULT_PAGE_SIZE
+  initialPageSize = PAGINACION.TAMAÑO_PAGINA_POR_DEFECTO
 }: UsePaginationOptions) {
   const [currentPage, setCurrentPage] = useState(initialPage)
   const [pageSize, setPageSize] = useState(initialPageSize)
