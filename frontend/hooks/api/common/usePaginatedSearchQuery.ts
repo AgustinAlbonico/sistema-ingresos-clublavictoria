@@ -15,12 +15,14 @@ interface UsePaginatedSearchQueryOptions<T> {
   queryKey: string;
   url: string;
   initialLimit?: number;
+  enabled?: boolean;
 }
 
 export function usePaginatedSearchQuery<T>({
   queryKey,
   url,
   initialLimit = 10,
+  enabled = true,
 }: UsePaginatedSearchQueryOptions<T>) {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(initialLimit);
@@ -56,6 +58,7 @@ export function usePaginatedSearchQuery<T>({
     },
     staleTime: STALE_TIME,
     placeholderData: (previousData) => previousData,
+    enabled,
   });
 
   const totalPages = Math.ceil((query.data?.total || 0) / limit);

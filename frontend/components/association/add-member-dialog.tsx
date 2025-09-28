@@ -11,15 +11,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import {
-  Search,
-  UserPlus,
-  Mail,
-  Phone,
-  Plus,
-  ArrowRight,
-  ArrowLeft,
-} from "lucide-react";
+import { Search, UserPlus, Plus, ArrowRight, ArrowLeft } from "lucide-react";
 import { SocioWithFoto } from "@/lib/types";
 import { useSociosDisponiblesTemporada } from "@/hooks/api/temporadas/useSociosDisponiblesTemporada";
 
@@ -42,7 +34,6 @@ export function AddMemberDialog({
   const {
     data: socios,
     isLoading,
-    searchTerm: currentSearchTerm,
     setSearch: setSociosSearchTerm,
     nextPage,
     prevPage,
@@ -50,13 +41,16 @@ export function AddMemberDialog({
     page,
     totalPages,
     total,
+    enabled: sociosQueryEnabled,
   } = useSociosDisponiblesTemporada(temporadaId);
 
   const sociosData = socios || [];
 
   const handleSearchChange = (value: string) => {
     setSearchTerm(value);
-    setSociosSearchTerm(value);
+    if (sociosQueryEnabled) {
+      setSociosSearchTerm(value);
+    }
   };
 
   const handleAddMember = (socioId: string) => {
@@ -96,12 +90,19 @@ export function AddMemberDialog({
               value={searchTerm}
               onChange={(e) => handleSearchChange(e.target.value)}
               className="pl-10"
+              disabled={!sociosQueryEnabled}
             />
           </div>
 
           {/* Members List */}
           <div className="flex-1 overflow-y-auto">
-            {isLoading && socios.length === 0 ? (
+            {!sociosQueryEnabled ? (
+              <div className="p-4 text-center">
+                <p className="text-sm text-muted-foreground">
+                  Selecciona una temporada para buscar socios disponibles.
+                </p>
+              </div>
+            ) : isLoading && socios.length === 0 ? (
               <div className="p-4 text-center">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
                 <p className="mt-2 text-sm text-muted-foreground">
@@ -187,7 +188,7 @@ export function AddMemberDialog({
           </div>
 
           {/* Pagination */}
-          {totalPages > 1 && socios.length > 0 && (
+          {sociosQueryEnabled && totalPages > 1 && socios.length > 0 && (
             <div className="p-4 border-t">
               <div className="flex flex-col text-center items-center justify-between">
                 <p className="text-sm text-muted-foreground mb-4">
