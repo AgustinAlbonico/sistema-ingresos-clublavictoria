@@ -80,20 +80,37 @@ CREATE TABLE SOCIO_TEMPORADA (
 -- TABLA: REGISTRO_INGRESO
 -- =============================================
 CREATE TABLE REGISTRO_INGRESO (
-    id_ingreso INT AUTO_INCREMENT PRIMARY KEY,
-    fecha DATE NOT NULL DEFAULT (CURRENT_DATE),
-    hora_ingreso TIME NOT NULL DEFAULT (CURRENT_TIME),
-    tipo_ingreso ENUM('SOCIO_CLUB', 'SOCIO_PILETA', 'NO_SOCIO') NOT NULL,
-    id_socio INT NULL,
-    
+    id_ingreso       INT AUTO_INCREMENT PRIMARY KEY,
+    fecha            DATE NOT NULL DEFAULT (CURDATE()),
+    hora_ingreso     TIME NOT NULL DEFAULT (CURTIME()),
+    tipo_ingreso     ENUM('SOCIO_CLUB', 'SOCIO_PILETA', 'NO_SOCIO') NOT NULL,
+    id_socio         INT NULL,
+    dni              VARCHAR(15) NULL,                 -- solo se completa para NO_SOCIO
+    habilita_pileta  BOOLEAN NOT NULL,
+    medio_pago ENUM('TRANSFERENCIA', 'EFECTIVO') NULL,
+	importe INT NULL,
+
     CONSTRAINT fk_socio
-        FOREIGN KEY (id_socio) REFERENCES SOCIO(id_socio) 
+        FOREIGN KEY (id_socio) REFERENCES SOCIO(id_socio)
         ON DELETE SET NULL ON UPDATE CASCADE,
-        
+
+	-- Unicidad por día (según el tipo de persona)
+    CONSTRAINT ux_socio_por_dia   UNIQUE (id_socio, fecha),
+    CONSTRAINT ux_no_socio_por_dia UNIQUE (dni, fecha),
+    
+    -- Valido que si es un socio entonces tiene que haber id_socio y dni vacio, en caso de que no sea soy voy a registrar
+    -- el dni y no va a haber id_socio.
+    CONSTRAINT chk_identidad
+	CHECK (
+	(tipo_ingreso IN ('SOCIO_CLUB','SOCIO_PILETA') AND id_socio IS NOT NULL AND dni IS NULL)
+		OR
+	(tipo_ingreso = 'NO_SOCIO' AND id_socio IS NULL AND dni IS NOT NULL)
+	),
+
     INDEX idx_fecha (fecha),
     INDEX idx_tipo_ingreso (tipo_ingreso),
     INDEX idx_socio_fecha (id_socio, fecha)
-);
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- =============================================
 -- RESTRICCIONES ADICIONALES
