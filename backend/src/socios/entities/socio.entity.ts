@@ -8,7 +8,7 @@ import {
 import { SocioTemporada } from 'src/asociaciones/entities/socio-temporada.entity';
 import { RegistroIngreso } from 'src/registro-ingreso/entities/registro-ingreso.entity';
 
-@Entity('SOCIO')
+@Entity('socio')
 export class Socio {
   @PrimaryGeneratedColumn({ name: 'id_socio' })
   id: number;
@@ -30,10 +30,10 @@ export class Socio {
   @Column({ length: 150, nullable: true })
   email?: string;
 
-  @Column({ type: 'date', default: () => 'CURRENT_DATE', name: "fecha_alta" })
+  @Column({ type: 'date', default: () => 'CURRENT_DATE', name: 'fecha_alta' })
   fechaAlta: string;
 
-  @Column({ type: 'date', name: "fecha_nacimiento"})
+  @Column({ type: 'date', name: 'fecha_nacimiento' })
   fechaNacimiento: string;
 
   @Column({ length: 255, nullable: true })
@@ -46,7 +46,7 @@ export class Socio {
   @Column({ type: 'enum', enum: ['MASCULINO', 'FEMENINO'] })
   genero: string;
 
-  @Column({ length: 500, nullable: true, name: "foto_url" })
+  @Column({ length: 500, nullable: true, name: 'foto_url' })
   fotoUrl?: string;
 
   @OneToMany(() => SocioTemporada, (st) => st.socio)

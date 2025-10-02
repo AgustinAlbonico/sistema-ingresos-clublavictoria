@@ -1,13 +1,23 @@
 import { Socio } from 'src/socios/entities/socio.entity';
 import { TemporadaPileta } from 'src/temporadas/entities/temporada.entity';
-import { Column, Entity, JoinColumn, ManyToOne, PrimaryColumn, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 
-@Entity('SOCIO_TEMPORADA')
+@Entity('socio_temporada')
 export class SocioTemporada {
   @PrimaryGeneratedColumn({ name: 'id_socio_temporada' })
   id: number;
 
-  @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP', name: "fecha_hora_inscripcion" })
+  @Column({
+    type: 'timestamp',
+    default: () => 'now()',
+    name: 'fecha_hora_inscripcion',
+  })
   fechaHoraInscripcion: string;
 
   @ManyToOne(() => Socio, (socio) => socio.temporadas, {

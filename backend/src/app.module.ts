@@ -25,13 +25,14 @@ import { CloudinaryModule } from './cloudinary/cloudinary.module';
       imports: [AppConfigModule],
       inject: [AppConfigService],
       useFactory: (configService: AppConfigService) => ({
-        type: 'mysql',
+        type: 'postgres',
         host: configService.getDatabaseHost(),
         username: configService.getDatabaseUser(),
         password: configService.getDatabasePassword(),
         port: configService.getDatabasePort(),
         database: configService.getDatabaseName(),
         timezone: configService.getDatabaseTimezone(),
+        logging: true,
         entities: [
           Socio,
           TemporadaPileta,

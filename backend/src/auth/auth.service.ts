@@ -19,6 +19,8 @@ export class AuthService {
       throw new CustomError('Usuario no encontrado', 404);
     }
 
+    console.log(userDb);
+
     const isPasswordValid = await bcrypt.compare(
       input.password,
       userDb.password,

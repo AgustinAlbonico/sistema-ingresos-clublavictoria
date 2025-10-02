@@ -4,7 +4,6 @@ import helmet from 'helmet';
 import { AppConfigService } from './config/AppConfig/app-config.service';
 import { ValidationPipe } from '@nestjs/common';
 import { GlobalHttpExceptionFilter } from './common/filters/exception.filter';
-import multer from 'multer';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);

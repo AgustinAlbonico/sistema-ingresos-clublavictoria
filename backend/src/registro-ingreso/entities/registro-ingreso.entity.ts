@@ -8,24 +8,38 @@ import {
 } from 'typeorm';
 import { Socio } from 'src/socios/entities/socio.entity';
 
-@Entity('REGISTRO_INGRESO')
+@Entity('registro_ingreso')
 export class RegistroIngreso {
   @PrimaryGeneratedColumn({ name: 'id_ingreso' })
   id: number;
 
-  @Column({ type: 'date', default: () => 'CURRENT_DATE' })
-  @Index()
-  fecha: Date;
+  @Column({ nullable: true, name: 'id_socio' })
+  id_socio: number;
 
-  @Column({ type: 'time', default: () => 'CURRENT_TIME' })
-  hora_ingreso: string;
+  @Column({ type: 'varchar', length: 20, name: 'dni', nullable: true })
+  @Index()
+  dni: string;
 
   @Column({ type: 'enum', enum: ['SOCIO_CLUB', 'SOCIO_PILETA', 'NO_SOCIO'] })
   @Index()
-  tipo_ingreso: string;
+  tipo_ingreso: 'SOCIO_CLUB' | 'SOCIO_PILETA' | 'NO_SOCIO';
 
-  @Column({ nullable: true })
-  id_socio: number;
+  @Column({ type: 'boolean', name: 'habilita_pileta' })
+  habilita_pileta: boolean;
+
+  @Column({ type: 'enum', enum: ['EFECTIVO', 'TRANSFERENCIA'], nullable: true })
+  metodo_pago: 'EFECTIVO' | 'TRANSFERENCIA';
+
+  @Column({ type: 'int', name: 'importe', nullable: true })
+  importe: number;
+
+  @Column({
+    type: 'timestamp',
+    default: () => 'now()',
+    name: 'fecha_hora_ingreso',
+  })
+  @Index()
+  fecha_hora_ingreso: Date;
 
   @ManyToOne(() => Socio, (socio) => socio.ingresos, {
     onDelete: 'SET NULL',
